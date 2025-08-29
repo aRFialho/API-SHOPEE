@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopee Manager - Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="/css/dashboard.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Fundo animado com logos Shopee -->
+    <div class="shopee-bg-logos">
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+      <img src="/images/shopee-logo.png" alt="Shopee" class="floating-logo" />
+    </div>
+
+    <!-- Partículas flutuantes -->
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+
+    <div class="container">
+      <!-- Header -->
+      <header class="header bounce-in">
+        <div class="header-content">
+          <h1>
+            <img
+              src="/images/shopee-logo.png"
+              alt="Shopee"
+              class="shopee-logo"
+            />
+            Shopee Manager
+          </h1>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="syncProducts()">
+              <i class="fas fa-sync"></i> Sincronizar
+            </button>
+            <button class="btn btn-success" onclick="openProductModal()">
+              <i class="fas fa-plus"></i> Novo Produto
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Resto do conteúdo permanece igual... -->
+
+      <!-- Navigation -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('dashboard')">
+          <i class="fas fa-chart-line"></i> Dashboard
+        </button>
+        <button class="tab-btn" onclick="showTab('products')">
+          <i class="fas fa-box"></i> Produtos
+        </button>
+        <button class="tab-btn" onclick="showTab('ai')">
+          <i class="fas fa-robot"></i> IA & Analytics
+        </button>
+        <button class="tab-btn" onclick="showTab('notifications')">
+          <i class="fas fa-bell"></i> Alertas
+        </button>
+        <button class="tab-btn" onclick="showTab('shopee')">
+          <i class="fas fa-link"></i> Shopee
+        </button>
+      </nav>
+
+      <!-- Dashboard Tab -->
+      <div id="dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-products">0</h3>
+              <p>Total de Produtos</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-chart-up"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="active-products">0</h3>
+              <p>Produtos Ativos</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="low-stock">0</h3>
+              <p>Estoque Baixo</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="stock-value">R\$ 0</h3>
+              <p>Valor do Estoque</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3><i class="fas fa-trophy"></i> Top Produtos</h3>
+            <div id="top-products" class="list-container">
+              <div class="loading">Carregando...</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3><i class="fas fa-exclamation-circle"></i> Estoque Baixo</h3>
+            <div id="low-stock-products" class="list-container">
+              <div class="loading">Carregando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Tab -->
+      <div id="products" class="tab-content">
+        <div class="products-header">
+          <h2>Gestão de Produtos</h2>
+          <div class="filters">
+            <select id="status-filter" onchange="filterProducts()">
+              <option value="">Todos os Status</option>
+              <option value="active">Ativo</option>
+              <option value="inactive">Inativo</option>
+              <option value="draft">Rascunho</option>
+            </select>
+            <input
+              type="text"
+              id="search-products"
+              placeholder="Buscar produtos..."
+              onkeyup="searchProducts()"
+            />
+          </div>
+        </div>
+        <div id="products-table" class="table-container">
+          <div class="loading">Carregando produtos...</div>
+        </div>
+      </div>
+
+      <!-- AI Tab -->
+      <div id="ai" class="tab-content">
+        <div class="ai-grid">
+          <div class="card">
+            <h3><i class="fas fa-brain"></i> Análise de Preços IA</h3>
+            <button class="btn btn-primary" onclick="runPriceAnalysis()">
+              <i class="fas fa-magic"></i> Analisar Preços
+            </button>
+            <div id="price-analysis" class="analysis-results"></div>
+          </div>
+          <div class="card">
+            <h3><i class="fas fa-chart-line"></i> Previsão de Demanda</h3>
+            <button class="btn btn-primary" onclick="runDemandForecast()">
+              <i class="fas fa-crystal-ball"></i> Prever Demanda
+            </button>
+            <div id="demand-forecast" class="analysis-results"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Tab -->
+      <div id="notifications" class="tab-content">
+        <div class="notifications-header">
+          <h2>Alertas Inteligentes</h2>
+          <button class="btn btn-primary" onclick="refreshAlerts()">
+            <i class="fas fa-refresh"></i> Atualizar
+          </button>
+        </div>
+        <div id="alerts-container" class="alerts-container">
+          <div class="loading">Carregando alertas...</div>
+        </div>
+      </div>
+
+      <!-- Shopee Tab -->
+      <div id="shopee" class="tab-content">
+        <div class="shopee-status">
+          <h2>Status da Integração Shopee</h2>
+          <div id="shopee-status" class="status-container">
+            <div class="loading">Verificando status...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Benchmarking Tab -->
+    <div id="benchmarking" class="tab-content">
+      <div class="benchmarking-header">
+        <h2>
+          <i class="fas fa-chart-bar"></i> Análise Competitiva & Benchmarking
+        </h2>
+        <div class="benchmarking-controls">
+          <select id="benchmark-type" onchange="updateBenchmarkType()">
+            <option value="category">Por Categoria</option>
+            <option value="product">Produto Específico</option>
+            <option value="trends">Tendências de Mercado</option>
+          </select>
+          <button class="btn btn-primary" onclick="runBenchmarkAnalysis()">
+            <i class="fas fa-search"></i> Analisar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros de Benchmarking -->
+      <div class="benchmark-filters">
+        <div id="category-filter" class="filter-group">
+          <label for="category-select">Categoria:</label>
+          <select id="category-select">
+            <option value="">Todas as categorias</option>
+            <option value="Eletrônicos">Eletrônicos</option>
+            <option value="Roupas">Roupas</option>
+            <option value="Casa">Casa & Jardim</option>
+            <option value="Esportes">Esportes</option>
+            <option value="Beleza">Beleza & Saúde</option>
+          </select>
+        </div>
+
+        <div id="product-filter" class="filter-group" style="display: none">
+          <label for="product-select">Produto:</label>
+          <select id="product-select">
+            <option value="">Selecione um produto</option>
+          </select>
+        </div>
+
+        <div id="trends-filter" class="filter-group" style="display: none">
+          <label for="period-select">Período:</label>
+          <select id="period-select">
+            <option value="30">Últimos 30 dias</option>
+            <option value="60">Últimos 60 dias</option>
+            <option value="90">Últimos 90 dias</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Resultados do Benchmarking -->
+      <div id="benchmark-results" class="benchmark-results">
+        <div class="benchmark-welcome">
+          <div class="welcome-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <h3>Análise Competitiva Inteligente</h3>
+          <p>Selecione o tipo de análise e clique em "Analisar" para começar</p>
+          <div class="benchmark-features">
+            <div class="feature-item">
+              <i class="fas fa-target"></i>
+              <span>Posicionamento Competitivo</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-chart-line"></i>
+              <span>Análise de Tendências</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-lightbulb"></i>
+              <span>Oportunidades de Mercado</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-shield-alt"></i>
+              <span>Identificação de Ameaças</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards de Resultados -->
+      <div id="benchmark-cards" class="benchmark-cards" style="display: none">
+        <!-- Resumo Executivo -->
+        <div class="benchmark-card executive-summary">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Resumo Executivo</h3>
+          </div>
+          <div id="executive-summary-content" class="card-content">
+            <!-- Conteúdo será preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Análise de Preços -->
+        <div class="benchmark-card price-analysis">
+          <div class="card-header">
+            <h3><i class="fas fa-dollar-sign"></i> Análise de Preços</h3>
+          </div>
+          <div id="price-analysis-content" class="card-content">
+            <!-- Conteúdo será preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Competidores -->
+        <div class="benchmark-card competitors">
+          <div class="card-header">
+            <h3><i class="fas fa-users"></i> Análise Competitiva</h3>
+          </div>
+          <div id="competitors-content" class="card-content">
+            <!-- Conteúdo será preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Oportunidades -->
+        <div class="benchmark-card opportunities">
+          <div class="card-header">
+            <h3><i class="fas fa-lightbulb"></i> Oportunidades</h3>
+          </div>
+          <div id="opportunities-content" class="card-content">
+            <!-- Conteúdo será preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Recomendações -->
+        <div class="benchmark-card recommendations">
+          <div class="card-header">
+            <h3><i class="fas fa-rocket"></i> Recomendações Estratégicas</h3>
+          </div>
+          <div id="recommendations-content" class="card-content">
+            <!-- Conteúdo será preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Gráfico de Posicionamento -->
+        <div class="benchmark-card positioning-chart">
+          <div class="card-header">
+            <h3><i class="fas fa-crosshairs"></i> Mapa de Posicionamento</h3>
+          </div>
+          <div id="positioning-chart-content" class="card-content">
+            <canvas id="positioningChart" width="400" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal para Novo Produto -->
+    <div id="product-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Novo Produto</h3>
+          <span class="close" onclick="closeProductModal()">&times;</span>
+        </div>
+        <form id="product-form" onsubmit="saveProduct(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="product-name">Nome do Produto *</label>
+              <input type="text" id="product-name" required />
+            </div>
+            <div class="form-group">
+              <label for="product-category">Categoria</label>
+              <input type="text" id="product-category" />
+            </div>
+            <div class="form-group">
+              <label for="product-price">Preço *</label>
+              <input type="number" id="product-price" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label for="product-cost">Preço de Custo</label>
+              <input type="number" id="product-cost" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label for="product-stock">Estoque</label>
+              <input type="number" id="product-stock" value="0" />
+            </div>
+            <div class="form-group">
+              <label for="product-status">Status</label>
+              <select id="product-status">
+                <option value="draft">Rascunho</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="product-description">Descrição</label>
+            <textarea id="product-description" rows="3"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeProductModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Salvar Produto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Navigation -->
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="showTab('dashboard')">
+        <i class="fas fa-chart-line"></i> Dashboard
+      </button>
+      <button class="tab-btn" onclick="showTab('products')">
+        <i class="fas fa-box"></i> Produtos
+      </button>
+      <button class="tab-btn" onclick="showTab('ai')">
+        <i class="fas fa-robot"></i> IA & Analytics
+      </button>
+      <button class="tab-btn" onclick="showTab('benchmarking')">
+        <i class="fas fa-chart-bar"></i> Benchmarking
+      </button>
+      <button class="tab-btn" onclick="showTab('notifications')">
+        <i class="fas fa-bell"></i> Alertas
+      </button>
+      <button class="tab-btn" onclick="showTab('shopee')">
+        <i class="fas fa-link"></i> Shopee
+      </button>
+    </nav>
+
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>
