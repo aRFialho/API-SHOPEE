@@ -90,6 +90,25 @@ app.use('/automation', automationRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/benchmarking', benchmarkingRoutes);
 // ========================================
+// CONFIGURAÇÃO DE CSP (Content Security Policy)
+// ========================================
+app.use((req, res, next) => {
+  // CSP mais permissivo para desenvolvimento
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
+      "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
+      "img-src 'self' data: https: http:; " +
+      "connect-src 'self' https:; " +
+      "frame-src 'none';"
+  );
+  next();
+});
+
+console.log('🔒 CSP configurado para permitir CDNs externos');
+// ========================================
 // SERVIR ARQUIVOS ESTÁTICOS E INTERFACE WEB
 // ========================================
 
