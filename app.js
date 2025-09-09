@@ -3,12 +3,28 @@ const path = require('path');
 
 const app = express();
 
-console.log('🚀 TESTE DEFINITIVO - Shopee Manager');
+console.log('🚀 CAMINHOS CORRIGIDOS - Shopee Manager');
+console.log('📁 Diretório raiz:', __dirname);
 
 app.use(express.json());
 
 // ========================================
-// ROTAS DE TESTE
+// ARQUIVOS ESTÁTICOS - CAMINHOS CORRETOS DA RAIZ
+// ========================================
+
+// Servir CSS, JS e Images da pasta src/public
+app.use('/css', express.static(path.join(__dirname, 'src', 'public', 'css')));
+app.use('/js', express.static(path.join(__dirname, 'src', 'public', 'js')));
+app.use(
+  '/images',
+  express.static(path.join(__dirname, 'src', 'public', 'images'))
+);
+
+console.log('✅ CSS path:', path.join(__dirname, 'src', 'public', 'css'));
+console.log('✅ JS path:', path.join(__dirname, 'src', 'public', 'js'));
+
+// ========================================
+// ROTAS
 // ========================================
 
 app.get('/', (req, res) => {
@@ -19,9 +35,13 @@ app.get('/dashboard', (req, res) => {
   const dashboardPath = path.join(__dirname, 'src', 'views', 'dashboard.html');
   const fs = require('fs');
 
+  console.log('📊 Dashboard path:', dashboardPath);
+
   if (fs.existsSync(dashboardPath)) {
+    console.log('✅ Dashboard encontrado!');
     res.sendFile(dashboardPath);
   } else {
+    console.log('❌ Dashboard NÃO encontrado');
     res.status(404).json({
       error: 'Dashboard não encontrado',
       path: dashboardPath,
@@ -29,61 +49,68 @@ app.get('/dashboard', (req, res) => {
   }
 });
 
-// TESTE CSS - ROTA SIMPLES
+// TESTE CSS
 app.get('/test-css', (req, res) => {
   const fs = require('fs');
-  const cssPath = path.join(__dirname, 'src', 'public', 'css');
+  const cssDir = path.join(__dirname, 'src', 'public', 'css');
+  const cssFile = path.join(cssDir, 'dashboard.css');
+
+  console.log('🎨 Testando CSS...');
+  console.log('📁 CSS Dir:', cssDir);
+  console.log('�� CSS File:', cssFile);
 
   try {
-    const files = fs.readdirSync(cssPath);
+    const files = fs.readdirSync(cssDir);
+    const cssExists = fs.existsSync(cssFile);
+    const cssSize = cssExists ? fs.statSync(cssFile).size : 0;
+
     res.json({
       success: true,
-      message: 'TESTE CSS FUNCIONANDO!',
-      css_directory: cssPath,
-      files: files,
-      dashboard_css_exists: fs.existsSync(path.join(cssPath, 'dashboard.css')),
+      message: 'TESTE CSS - CAMINHOS CORRIGIDOS!',
+      css_directory: cssDir,
+      css_file: cssFile,
+      files_in_css_dir: files,
+      dashboard_css_exists: cssExists,
+      dashboard_css_size: cssSize,
+      __dirname: __dirname,
     });
   } catch (error) {
     res.json({
       success: false,
       error: error.message,
-      css_directory: cssPath,
+      css_directory: cssDir,
+      directory_exists: fs.existsSync(cssDir),
+      __dirname: __dirname,
     });
   }
 });
 
-// SERVIR CSS DIRETAMENTE
-app.get('/css/dashboard.css', (req, res) => {
+// TESTE JS
+app.get('/test-js', (req, res) => {
   const fs = require('fs');
-  const cssPath = path.join(__dirname, 'src', 'public', 'css', 'dashboard.css');
+  const jsDir = path.join(__dirname, 'src', 'public', 'js');
+  const jsFile = path.join(jsDir, 'dashboard.js');
 
-  console.log('🎨 Servindo CSS:', cssPath);
+  try {
+    const files = fs.readdirSync(jsDir);
+    const jsExists = fs.existsSync(jsFile);
+    const jsSize = jsExists ? fs.statSync(jsFile).size : 0;
 
-  if (fs.existsSync(cssPath)) {
-    res.setHeader('Content-Type', 'text/css');
-    res.sendFile(cssPath);
-  } else {
-    res.status(404).json({
-      error: 'CSS não encontrado',
-      path: cssPath,
+    res.json({
+      success: true,
+      message: 'TESTE JS - CAMINHOS CORRIGIDOS!',
+      js_directory: jsDir,
+      js_file: jsFile,
+      files_in_js_dir: files,
+      dashboard_js_exists: jsExists,
+      dashboard_js_size: jsSize,
     });
-  }
-});
-
-// SERVIR JS DIRETAMENTE
-app.get('/js/dashboard.js', (req, res) => {
-  const fs = require('fs');
-  const jsPath = path.join(__dirname, 'src', 'public', 'js', 'dashboard.js');
-
-  console.log('⚡ Servindo JS:', jsPath);
-
-  if (fs.existsSync(jsPath)) {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.sendFile(jsPath);
-  } else {
-    res.status(404).json({
-      error: 'JS não encontrado',
-      path: jsPath,
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      js_directory: jsDir,
+      directory_exists: fs.existsSync(jsDir),
     });
   }
 });
@@ -92,13 +119,26 @@ app.get('/js/dashboard.js', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'TESTE_DEFINITIVO_123',
+    version: 'CAMINHOS_CORRIGIDOS_V2',
     timestamp: new Date().toISOString(),
-    message: 'Se você vê esta versão, o deploy funcionou!',
+    app_location: 'RAIZ',
+    src_location: 'src/',
+    __dirname: __dirname,
   });
 });
 
-// 404 handler (sempre por último)
+// APIs básicas
+app.get('/api/products', (req, res) => {
+  res.json({
+    success: true,
+    products: [
+      { id: 1, name: 'Produto Teste 1', price: 99.9 },
+      { id: 2, name: 'Produto Teste 2', price: 149.9 },
+    ],
+  });
+});
+
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: '404',
@@ -107,9 +147,11 @@ app.use((req, res) => {
       '/',
       '/dashboard',
       '/test-css',
+      '/test-js',
       '/css/dashboard.css',
       '/js/dashboard.js',
       '/api/health',
+      '/api/products',
     ],
   });
 });
