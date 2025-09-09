@@ -3,7 +3,8 @@
 // ========================================
 
 // Definir API_BASE
-const API_BASE = window.location.origin;
+const API_BASE =
+  'https://shopee-manager-9pdwpmws9-raphaels-projects-11cd9f6b.vercel.app';
 console.log('🔗 API_BASE definida como:', API_BASE);
 
 // Variáveis globais
