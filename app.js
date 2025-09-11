@@ -3,35 +3,32 @@ const path = require('path');
 const crypto = require('crypto');
 const app = express();
 
-console.log('🚀 Iniciando Shopee Manager - SUA Loja Real');
-
 app.use(express.json());
 
 // ========================================
-// CONFIGURAÇÃO SHOPEE
+// CONFIGURAÇÃO COM DOMÍNIO FIXO
 // ========================================
+const FIXED_DOMAIN = 'https://shopee-manager-drossi.vercel.app';
+
 const SHOPEE_CONFIG = {
-  partner_id: process.env.SHOPEE_PARTNER_ID || '1185765',
+  partner_id: '1185765',
   partner_key:
-    process.env.SHOPEE_PARTNER_KEY ||
     'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
-  redirect_url:
-    'https://shopee-manager-lnrxke3h2-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback',
-  base_domain:
-    'https://shopee-manager-lnrxke3h2-raphaels-projects-11cd9f6b.vercel.app',
+  redirect_url: `${FIXED_DOMAIN}/auth/shopee/callback`,
+  base_domain: FIXED_DOMAIN,
   environment: 'sandbox',
   api_base: 'https://partner.test-stable.shopeemobile.com',
 };
+
+console.log('✅ Domínio fixo configurado:', FIXED_DOMAIN);
 
 // Função para gerar assinatura
 const generateSignature = (path, timestamp, accessToken = '', shopId = '') => {
   const partnerId = SHOPEE_CONFIG.partner_id;
   const partnerKey = SHOPEE_CONFIG.partner_key;
-
   let baseString = `${partnerId}${path}${timestamp}`;
   if (accessToken) baseString += accessToken;
   if (shopId) baseString += shopId;
-
   return crypto
     .createHmac('sha256', partnerKey)
     .update(baseString)
@@ -43,17 +40,8 @@ const generateAuthUrl = () => {
   const timestamp = Math.floor(Date.now() / 1000);
   const path = '/api/v2/shop/auth_partner';
   const signature = generateSignature(path, timestamp);
-
-  // Usar o domínio base conforme configurado na Shopee
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
-
-console.log('✅ Configuração Shopee carregada:', {
-  partner_id: SHOPEE_CONFIG.partner_id,
-  environment: SHOPEE_CONFIG.environment,
-  base_domain: SHOPEE_CONFIG.base_domain,
-  redirect_url: SHOPEE_CONFIG.redirect_url,
-});
 
 // ========================================
 // ARQUIVOS ESTÁTICOS
@@ -68,16 +56,16 @@ app.use(
 // ========================================
 // ROTAS PRINCIPAIS
 // ========================================
-app.get('/', (req, res) => {
-  res.redirect('/dashboard');
-});
+app.get('/', (req, res) => res.redirect('/dashboard'));
 
 app.get('/dashboard', (req, res) => {
   const dashboardPath = path.join(__dirname, 'src', 'views', 'dashboard.html');
   res.sendFile(dashboardPath);
 });
 
-// Callback da Shopee
+// ========================================
+// CALLBACK DA SHOPEE
+// ========================================
 app.get('/auth/shopee/callback', (req, res) => {
   const { code, shop_id, error } = req.query;
 
@@ -85,7 +73,7 @@ app.get('/auth/shopee/callback', (req, res) => {
     code: code?.substring(0, 10) + '...',
     shop_id,
     error,
-    full_query: req.query,
+    domain: FIXED_DOMAIN,
   });
 
   if (error) {
@@ -95,7 +83,7 @@ app.get('/auth/shopee/callback', (req, res) => {
         <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff6b6b; color: white;">
           <h1>❌ Erro na Autorização</h1>
           <p><strong>Erro:</strong> ${error}</p>
-          <p>Verifique se o domínio está configurado corretamente na Shopee Open Platform.</p>
+          <p><strong>Domínio:</strong> ${FIXED_DOMAIN}</p>
           <button onclick="window.close()" style="padding: 10px 20px; background: white; color: #ff6b6b; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
         </body>
       </html>
@@ -103,30 +91,40 @@ app.get('/auth/shopee/callback', (req, res) => {
   }
 
   if (code && shop_id) {
-    // Salvar dados da autorização (implementar storage depois)
-    console.log('✅ Autorização bem-sucedida:', {
+    console.log('🎉 SUCESSO! SUA LOJA CONECTADA:', {
       shop_id,
       code: code.substring(0, 20) + '...',
     });
 
     res.send(`
       <html>
-        <head><title>SUA Loja Conectada!</title></head>
-        <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-          <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 500px; margin: 0 auto;">
-            <div style="font-size: 4em; margin-bottom: 20px;">🎉</div>
-            <h1>SUA Loja Shopee Conectada!</h1>
-            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
-              <p><strong>Shop ID:</strong> ${shop_id}</p>
-              <p><strong>Authorization Code:</strong> ${code.substring(0, 20)}...</p>
-              <p><strong>Status:</strong> ✅ Conectado com sucesso!</p>
+        <head><title>🎉 SUA Loja Conectada!</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+          <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 700px; margin: 0 auto;">
+            <div style="font-size: 6em; margin-bottom: 20px;">��</div>
+            <h1>SUA LOJA SHOPEE CONECTADA!</h1>
+            <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 10px; margin: 25px 0;">
+              <p><strong>✅ Shop ID:</strong> ${shop_id}</p>
+              <p><strong>✅ Authorization Code:</strong> ${code.substring(0, 30)}...</p>
+              <p><strong>✅ Domínio Fixo:</strong> ${FIXED_DOMAIN}</p>
+              <p><strong>✅ Status:</strong> CONECTADO COM SUCESSO!</p>
             </div>
-            <p>Agora você pode gerenciar seus milhares de produtos!</p>
-            <div style="margin-top: 20px;">
-              <button onclick="window.close()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
-                Fechar
+            <h2>🚀 AGORA VOCÊ PODE:</h2>
+            <div style="text-align: left; max-width: 500px; margin: 20px auto; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+              <ul style="list-style: none; padding: 0;">
+                <li>🛍️ Gerenciar seus milhares de produtos</li>
+                <li>💰 Atualizar preços em lote</li>
+                <li>📦 Controlar estoque</li>
+                <li>🎯 Gerenciar promoções</li>
+                <li>📊 Monitorar vendas</li>
+                <li>🔄 Sincronizar dados</li>
+              </ul>
+            </div>
+            <div style="margin-top: 30px;">
+              <button onclick="window.close()" style="padding: 15px 30px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; font-size: 16px;">
+                Fechar Janela
               </button>
-              <button onclick="window.location.href='/dashboard'" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+              <button onclick="window.location.href='/dashboard'" style="padding: 15px 30px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; font-size: 16px;">
                 Ir para Dashboard
               </button>
             </div>
@@ -142,6 +140,7 @@ app.get('/auth/shopee/callback', (req, res) => {
           <h1>⚠️ Parâmetros Inválidos</h1>
           <p>Code: ${code || 'Não recebido'}</p>
           <p>Shop ID: ${shop_id || 'Não recebido'}</p>
+          <p>Domínio: ${FIXED_DOMAIN}</p>
           <button onclick="window.close()">Fechar</button>
         </body>
       </html>
@@ -158,20 +157,19 @@ app.get('/api/my-shopee/setup', (req, res) => {
   res.json({
     success: true,
     configured: true,
-    partner_id_set: !!SHOPEE_CONFIG.partner_id,
-    partner_key_set: !!SHOPEE_CONFIG.partner_key,
-    message: 'Credenciais da SUA loja configuradas!',
+    domain_fixed: true,
+    partner_id_set: true,
+    partner_key_set: true,
+    message: 'SUA loja configurada com domínio fixo!',
     config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
-      api_base: SHOPEE_CONFIG.api_base,
-      base_domain: SHOPEE_CONFIG.base_domain,
+      fixed_domain: FIXED_DOMAIN,
       redirect_url: SHOPEE_CONFIG.redirect_url,
     },
-    domain_setup: {
-      shopee_domain_config: SHOPEE_CONFIG.base_domain,
-      callback_url: SHOPEE_CONFIG.redirect_url,
-      note: 'Configure o domínio base na Shopee Open Platform',
+    shopee_configuration: {
+      domain_to_set: FIXED_DOMAIN,
+      callback_endpoint: `${FIXED_DOMAIN}/auth/shopee/callback`,
     },
     status: 'ready_to_connect',
   });
@@ -185,16 +183,18 @@ app.get('/api/my-shopee/connect', (req, res) => {
     res.json({
       success: true,
       auth_url: authUrl,
-      message: 'Clique no link para conectar SUA loja Shopee',
+      message: 'Clique no auth_url para conectar SUA loja Shopee',
       instructions: [
-        '1. Clique no auth_url abaixo',
-        '2. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
-        '3. Autorize o acesso aos seus produtos',
-        '4. Aguarde o redirecionamento automático',
+        '1. Configure o domínio na Shopee Open Platform primeiro',
+        '2. Clique no auth_url abaixo',
+        '3. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
+        '4. Autorize o acesso aos seus produtos',
+        '5. Aguarde o redirecionamento automático',
       ],
       domain_info: {
-        configured_domain: SHOPEE_CONFIG.base_domain,
-        callback_endpoint: SHOPEE_CONFIG.redirect_url,
+        fixed_domain: FIXED_DOMAIN,
+        configure_in_shopee: FIXED_DOMAIN,
+        callback_url: SHOPEE_CONFIG.redirect_url,
         partner_id: SHOPEE_CONFIG.partner_id,
       },
     });
@@ -209,40 +209,19 @@ app.get('/api/my-shopee/connect', (req, res) => {
 
 // Status da SUA loja
 app.get('/api/my-shopee/status', (req, res) => {
-  try {
-    const isConnected = false; // Por enquanto false, depois implementamos storage do access_token
-
-    res.json({
-      success: true,
-      connected: isConnected,
-      message: isConnected
-        ? 'Sua loja está conectada!'
-        : 'Conecte sua loja primeiro',
-      credentials_status: 'configured',
-      domain_status: 'configured',
-      your_store: {
-        products_count: isConnected ? 'Carregando...' : 'Conecte sua loja',
-        orders_pending: isConnected ? 'Carregando...' : 'Conecte sua loja',
-        revenue_today: isConnected ? 'Carregando...' : 'Conecte sua loja',
-      },
-      features: {
-        manage_products: isConnected,
-        update_prices: isConnected,
-        manage_promotions: isConnected,
-        control_stock: isConnected,
-        view_orders: isConnected,
-      },
-      next_step: isConnected
-        ? 'Gerencie seus produtos'
-        : 'Conecte sua loja usando /api/my-shopee/connect',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao verificar status',
-      error: error.message,
-    });
-  }
+  res.json({
+    success: true,
+    connected: false,
+    message: 'Configure o domínio na Shopee e conecte sua loja',
+    domain_status: 'fixed_domain_ready',
+    fixed_domain: FIXED_DOMAIN,
+    configure_in_shopee: FIXED_DOMAIN,
+    next_steps: [
+      '1. Configure o domínio na Shopee Open Platform',
+      '2. Use /api/my-shopee/connect para gerar auth_url',
+      '3. Clique na auth_url para conectar sua loja',
+    ],
+  });
 });
 
 // SEUS produtos
@@ -254,6 +233,7 @@ app.get('/api/my-shopee/products', (req, res) => {
     products: [],
     total: 0,
     status: 'awaiting_connection',
+    fixed_domain: FIXED_DOMAIN,
     when_connected: {
       available_actions: [
         'Listar todos os seus produtos',
@@ -271,6 +251,7 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
   res.json({
     success: true,
     message: 'Dashboard da SUA loja Shopee',
+    fixed_domain: FIXED_DOMAIN,
     your_store_data: {
       total_products: 'Conecte sua loja',
       total_orders: 'Conecte sua loja',
@@ -291,13 +272,14 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'SUA_LOJA_V3',
+    version: 'FIXED_DOMAIN_V1',
     timestamp: new Date().toISOString(),
-    message: 'Shopee Manager - SUA Loja Real funcionando!',
+    message: 'Shopee Manager - SUA Loja Real com domínio fixo!',
+    fixed_domain: FIXED_DOMAIN,
     shopee_config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
-      domain_configured: true,
+      domain_fixed: true,
     },
   });
 });
@@ -311,6 +293,7 @@ app.get('/api/benchmarking', (req, res) => {
     success: true,
     message: 'Benchmarking dos SEUS produtos',
     note: 'Conecte sua loja para análise dos seus produtos',
+    fixed_domain: FIXED_DOMAIN,
   });
 });
 
@@ -323,6 +306,7 @@ app.get('/api/reports', (req, res) => {
       'estoque_seus_produtos',
       'performance_produtos',
     ],
+    fixed_domain: FIXED_DOMAIN,
   });
 });
 
@@ -334,6 +318,7 @@ app.use((req, res) => {
     error: '404 - Não encontrado',
     path: req.path,
     method: req.method,
+    fixed_domain: FIXED_DOMAIN,
     available_routes: [
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
@@ -354,6 +339,7 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🌟 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`🔗 Domínio fixo: ${FIXED_DOMAIN}`);
   });
 }
 
