@@ -16,9 +16,10 @@ const SHOPEE_CONFIG = {
     process.env.SHOPEE_PARTNER_KEY ||
     'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
   redirect_url:
-    process.env.SHOPEE_REDIRECT_URL ||
-    'https://shopee-manager-38y4vipxp-raphaels-projects-11cd9f6b.vercel.app',
-  environment: 'sandbox', // Suas credenciais são de teste
+    'https://shopee-manager-fpwfu79n3-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback',
+  base_domain:
+    'https://shopee-manager-fpwfu79n3-raphaels-projects-11cd9f6b.vercel.app',
+  environment: 'sandbox',
   api_base: 'https://partner.test-stable.shopeemobile.com',
 };
 
@@ -28,7 +29,6 @@ const generateSignature = (path, timestamp, accessToken = '', shopId = '') => {
   const partnerKey = SHOPEE_CONFIG.partner_key;
 
   let baseString = `${partnerId}${path}${timestamp}`;
-
   if (accessToken) baseString += accessToken;
   if (shopId) baseString += shopId;
 
@@ -44,13 +44,15 @@ const generateAuthUrl = () => {
   const path = '/api/v2/shop/auth_partner';
   const signature = generateSignature(path, timestamp);
 
+  // Usar o domínio base conforme configurado na Shopee
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
 
 console.log('✅ Configuração Shopee carregada:', {
   partner_id: SHOPEE_CONFIG.partner_id,
   environment: SHOPEE_CONFIG.environment,
-  api_base: SHOPEE_CONFIG.api_base,
+  base_domain: SHOPEE_CONFIG.base_domain,
+  redirect_url: SHOPEE_CONFIG.redirect_url,
 });
 
 // ========================================
@@ -83,44 +85,67 @@ app.get('/auth/shopee/callback', (req, res) => {
     code: code?.substring(0, 10) + '...',
     shop_id,
     error,
+    full_query: req.query,
   });
 
   if (error) {
     return res.send(`
       <html>
         <head><title>Erro na Autorização</title></head>
-        <body style="font-family: Arial; text-align: center; padding: 50px;">
+        <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff6b6b; color: white;">
           <h1>❌ Erro na Autorização</h1>
-          <p>Erro: ${error}</p>
-          <button onclick="window.close()">Fechar</button>
+          <p><strong>Erro:</strong> ${error}</p>
+          <p>Verifique se o domínio está configurado corretamente na Shopee Open Platform.</p>
+          <button onclick="window.close()" style="padding: 10px 20px; background: white; color: #ff6b6b; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
         </body>
       </html>
     `);
   }
 
   if (code && shop_id) {
-    // Aqui você salvaria o code e shop_id para trocar por access_token
+    // Salvar dados da autorização (implementar storage depois)
+    console.log('✅ Autorização bem-sucedida:', {
+      shop_id,
+      code: code.substring(0, 20) + '...',
+    });
+
     res.send(`
       <html>
         <head><title>SUA Loja Conectada!</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
           <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 500px; margin: 0 auto;">
-            <div style="font-size: 4em; margin-bottom: 20px;">��</div>
+            <div style="font-size: 4em; margin-bottom: 20px;">🎉</div>
             <h1>SUA Loja Shopee Conectada!</h1>
             <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
               <p><strong>Shop ID:</strong> ${shop_id}</p>
-              <p><strong>Code:</strong> ${code.substring(0, 20)}...</p>
+              <p><strong>Authorization Code:</strong> ${code.substring(0, 20)}...</p>
+              <p><strong>Status:</strong> ✅ Conectado com sucesso!</p>
             </div>
             <p>Agora você pode gerenciar seus milhares de produtos!</p>
-            <button onclick="window.close()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
-              Fechar e Voltar ao Dashboard
-            </button>
+            <div style="margin-top: 20px;">
+              <button onclick="window.close()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+                Fechar
+              </button>
+              <button onclick="window.location.href='/dashboard'" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+                Ir para Dashboard
+              </button>
+            </div>
           </div>
         </body>
       </html>
     `);
   } else {
-    res.status(400).send('Parâmetros inválidos recebidos da Shopee');
+    res.status(400).send(`
+      <html>
+        <head><title>Parâmetros Inválidos</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+          <h1>⚠️ Parâmetros Inválidos</h1>
+          <p>Code: ${code || 'Não recebido'}</p>
+          <p>Shop ID: ${shop_id || 'Não recebido'}</p>
+          <button onclick="window.close()">Fechar</button>
+        </body>
+      </html>
+    `);
   }
 });
 
@@ -140,7 +165,13 @@ app.get('/api/my-shopee/setup', (req, res) => {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
       api_base: SHOPEE_CONFIG.api_base,
+      base_domain: SHOPEE_CONFIG.base_domain,
       redirect_url: SHOPEE_CONFIG.redirect_url,
+    },
+    domain_setup: {
+      shopee_domain_config: SHOPEE_CONFIG.base_domain,
+      callback_url: SHOPEE_CONFIG.redirect_url,
+      note: 'Configure o domínio base na Shopee Open Platform',
     },
     status: 'ready_to_connect',
   });
@@ -159,12 +190,12 @@ app.get('/api/my-shopee/connect', (req, res) => {
         '1. Clique no auth_url abaixo',
         '2. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
         '3. Autorize o acesso aos seus produtos',
-        '4. Volte aqui para gerenciar sua loja',
+        '4. Aguarde o redirecionamento automático',
       ],
-      shop_info: {
+      domain_info: {
+        configured_domain: SHOPEE_CONFIG.base_domain,
+        callback_endpoint: SHOPEE_CONFIG.redirect_url,
         partner_id: SHOPEE_CONFIG.partner_id,
-        environment: SHOPEE_CONFIG.environment,
-        redirect_url: SHOPEE_CONFIG.redirect_url,
       },
     });
   } catch (error) {
@@ -188,6 +219,7 @@ app.get('/api/my-shopee/status', (req, res) => {
         ? 'Sua loja está conectada!'
         : 'Conecte sua loja primeiro',
       credentials_status: 'configured',
+      domain_status: 'configured',
       your_store: {
         products_count: isConnected ? 'Carregando...' : 'Conecte sua loja',
         orders_pending: isConnected ? 'Carregando...' : 'Conecte sua loja',
@@ -259,13 +291,13 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'SUA_LOJA_V2',
+    version: 'SUA_LOJA_V3',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager - SUA Loja Real funcionando!',
     shopee_config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
-      configured: true,
+      domain_configured: true,
     },
   });
 });
@@ -309,6 +341,7 @@ app.use((req, res) => {
       '/api/my-shopee/products',
       '/api/my-shopee/dashboard',
       '/api/health',
+      '/auth/shopee/callback',
     ],
   });
 });
