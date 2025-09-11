@@ -135,15 +135,40 @@ app.get('/auth/shopee/callback', (req, res) => {
 });
 
 // ========================================
-// APIs
+// APIs - INCLUINDO SHOPEE
 // ========================================
-const shopeeRoutes = require('./src/routes/shopee');
-app.use('/api/shopee', shopeeRoutes);
+
+// Carregar rotas da Shopee
+try {
+  const shopeeRoutes = require('./src/routes/shopee');
+  app.use('/api/shopee', shopeeRoutes);
+  console.log('✅ Rotas da Shopee carregadas com sucesso');
+} catch (error) {
+  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
+
+  // Fallback: criar rotas básicas da Shopee
+  app.get('/api/shopee/status', (req, res) => {
+    res.json({
+      success: false,
+      message: 'Arquivo de rotas da Shopee não encontrado',
+      error: error.message,
+      fix: 'Verifique se o arquivo src/routes/shopee.js existe',
+    });
+  });
+
+  app.get('/api/shopee/auth/url', (req, res) => {
+    res.json({
+      success: false,
+      message: 'Arquivo de rotas da Shopee não encontrado',
+      error: error.message,
+    });
+  });
+}
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'COMPLETO_V1',
+    version: 'COMPLETO_V2',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager funcionando perfeitamente!',
     features: [
@@ -159,6 +184,12 @@ app.get('/api/health', (req, res) => {
       partner_id: process.env.SHOPEE_PARTNER_ID ? '***' : 'NOT_SET',
       environment:
         process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+    },
+    routes_loaded: {
+      shopee:
+        !!require.cache[
+          require.resolve('./src/routes/shopee.js', { paths: [__dirname] })
+        ],
     },
   });
 });
@@ -231,6 +262,35 @@ app.get('/debug/files', (req, res) => {
   }
 });
 
+app.get('/debug/shopee', (req, res) => {
+  const fs = require('fs');
+
+  try {
+    const shopeeRoutesPath = path.join(__dirname, 'src', 'routes', 'shopee.js');
+    const shopeeConfigPath = path.join(__dirname, 'src', 'config', 'shopee.js');
+
+    res.json({
+      success: true,
+      files_check: {
+        routes_exists: fs.existsSync(shopeeRoutesPath),
+        config_exists: fs.existsSync(shopeeConfigPath),
+        routes_path: shopeeRoutesPath,
+        config_path: shopeeConfigPath,
+      },
+      environment_vars: {
+        partner_id: process.env.SHOPEE_PARTNER_ID ? '***' : 'NOT_SET',
+        partner_key: process.env.SHOPEE_PARTNER_KEY ? '***' : 'NOT_SET',
+        node_env: process.env.NODE_ENV || 'development',
+      },
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 // ========================================
 // 404 HANDLER
 // ========================================
@@ -247,12 +307,13 @@ app.use((req, res) => {
       '/api/benchmarking',
       '/api/reports',
       '/api/shopee/status',
+      '/api/shopee/auth/url',
       '/api/shopee/test',
       '/api/shopee/products/search',
       '/api/shopee/analysis/prices',
-      '/api/shopee/auth/url',
       '/auth/shopee/callback',
       '/debug/files',
+      '/debug/shopee',
     ],
   });
 });
@@ -268,6 +329,7 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
     console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
     console.log(`🛍️ Shopee Status: http://localhost:${PORT}/api/shopee/status`);
+    console.log(`🔧 Debug Shopee: http://localhost:${PORT}/debug/shopee`);
   });
 }
 
