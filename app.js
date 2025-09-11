@@ -16,9 +16,9 @@ const SHOPEE_CONFIG = {
     process.env.SHOPEE_PARTNER_KEY ||
     'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
   redirect_url:
-    'https://shopee-manager-fpwfu79n3-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback',
+    'https://shopee-manager-lnrxke3h2-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback',
   base_domain:
-    'https://shopee-manager-fpwfu79n3-raphaels-projects-11cd9f6b.vercel.app',
+    'https://shopee-manager-lnrxke3h2-raphaels-projects-11cd9f6b.vercel.app',
   environment: 'sandbox',
   api_base: 'https://partner.test-stable.shopeemobile.com',
 };

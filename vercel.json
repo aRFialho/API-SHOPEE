@@ -1,5 +1,6 @@
-{
+﻿{
   "version": 2,
+  "name": "shopee-manager",
   "builds": [
     {
       "src": "app.js",
@@ -8,20 +9,16 @@
   ],
   "routes": [
     {
-      "src": "/css/(.*)",
-      "dest": "/app.js"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/app.js"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/app.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/app.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "app.js": {
+      "maxDuration": 30
+    }
+  }
 }
