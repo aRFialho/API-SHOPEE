@@ -145,6 +145,38 @@ try {
   console.log('✅ Rotas da Shopee carregadas com sucesso');
 } catch (error) {
   console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
+}
+
+// Carregar rotas da SUA loja Shopee
+try {
+  const myShopeeRoutes = require('./src/routes/my-shopee');
+  app.use('/api/my-shopee', myShopeeRoutes);
+  console.log('✅ Rotas da SUA loja Shopee carregadas com sucesso');
+} catch (error) {
+  console.error('❌ Erro ao carregar rotas da sua loja:', error.message);
+}
+try {
+  const shopeeRoutes = require('./src/routes/shopee');
+  app.use('/api/shopee', shopeeRoutes);
+  console.log('✅ Rotas da Shopee carregadas com sucesso');
+} catch (error) {
+  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
+}
+
+// Carregar rotas da SUA loja Shopee
+try {
+  const myShopeeRoutes = require('./src/routes/my-shopee');
+  app.use('/api/my-shopee', myShopeeRoutes);
+  console.log('✅ Rotas da SUA loja Shopee carregadas com sucesso');
+} catch (error) {
+  console.error('❌ Erro ao carregar rotas da sua loja:', error.message);
+}
+try {
+  const shopeeRoutes = require('./src/routes/shopee');
+  app.use('/api/shopee', shopeeRoutes);
+  console.log('✅ Rotas da Shopee carregadas com sucesso');
+} catch (error) {
+  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
 
   // Fallback: criar rotas básicas da Shopee
   app.get('/api/shopee/status', (req, res) => {
