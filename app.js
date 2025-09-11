@@ -2,7 +2,7 @@
 const path = require('path');
 const app = express();
 
-console.log('🚀 Iniciando Shopee Manager - Versão Completa');
+console.log('🚀 Iniciando Shopee Manager - Gerenciador da SUA Loja');
 
 app.use(express.json());
 
@@ -17,8 +17,6 @@ app.use(
 );
 
 console.log('✅ Arquivos estáticos configurados');
-console.log('📁 CSS:', path.join(__dirname, 'src', 'public', 'css'));
-console.log('📁 JS:', path.join(__dirname, 'src', 'public', 'js'));
 
 // ========================================
 // ROTAS PRINCIPAIS
@@ -46,12 +44,12 @@ app.get('/auth/shopee/callback', (req, res) => {
     res.send(`
       <html>
         <head>
-          <title>Shopee - Autorização Concluída</title>
+          <title>Shopee - Sua Loja Conectada!</title>
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              padding: 50px;
+            body { 
+              font-family: Arial, sans-serif; 
+              text-align: center; 
+              padding: 50px; 
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               color: white;
               margin: 0;
@@ -67,149 +65,214 @@ app.get('/auth/shopee/callback', (req, res) => {
             h1 { font-size: 2.5em; margin-bottom: 20px; }
             .success-icon { font-size: 4em; margin-bottom: 20px; }
             .info { background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0; }
-            .countdown { font-size: 1.2em; margin-top: 20px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="success-icon">🎉</div>
-            <h1>Autorização Shopee Concluída!</h1>
+            <h1>SUA Loja Shopee Conectada!</h1>
             <div class="info">
               <p><strong>Shop ID:</strong> ${shop_id}</p>
               <p><strong>Code:</strong> ${code.substring(0, 20)}...</p>
             </div>
-            <p>Sua loja foi conectada com sucesso ao Shopee Manager!</p>
-            <div class="countdown">
-              Esta janela será fechada em <span id="timer">5</span> segundos...
-            </div>
+            <p>Agora você pode gerenciar seus produtos, preços e estoque!</p>
+            <button onclick="window.close()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+              Fechar e Voltar ao Dashboard
+            </button>
           </div>
-          <script>
-            let countdown = 5;
-            const timer = document.getElementById('timer');
-            const interval = setInterval(() => {
-              countdown--;
-              timer.textContent = countdown;
-              if (countdown <= 0) {
-                clearInterval(interval);
-                window.close();
-              }
-            }, 1000);
-          </script>
         </body>
       </html>
     `);
   } else {
-    res.status(400).send(`
-      <html>
-        <head>
-          <title>Shopee - Erro na Autorização</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              padding: 50px;
-              background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-              color: white;
-              margin: 0;
-            }
-            .container {
-              background: rgba(255,255,255,0.1);
-              padding: 40px;
-              border-radius: 15px;
-              backdrop-filter: blur(10px);
-              max-width: 500px;
-              margin: 0 auto;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>❌ Erro na Autorização</h1>
-            <p>Parâmetros inválidos recebidos da Shopee.</p>
-            <p>Tente novamente ou entre em contato com o suporte.</p>
-          </div>
-        </body>
-      </html>
-    `);
+    res.status(400).send('Erro na autorização da sua loja Shopee');
   }
 });
 
 // ========================================
-// APIs - INCLUINDO SHOPEE
+// ROTAS DA SUA LOJA SHOPEE
 // ========================================
 
-// Carregar rotas da Shopee
-try {
-  const shopeeRoutes = require('./src/routes/shopee');
-  app.use('/api/shopee', shopeeRoutes);
-  console.log('✅ Rotas da Shopee carregadas com sucesso');
-} catch (error) {
-  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
-}
+// Conectar SUA loja
+app.get('/api/my-shopee/connect', (req, res) => {
+  try {
+    // Gerar URL de autorização para SUA loja
+    const timestamp = Math.floor(Date.now() / 1000);
+    const partner_id = process.env.SHOPEE_PARTNER_ID || '1185765';
+    const redirect_url =
+      'https://shopee-manager-38y4vipxp-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback';
 
-// Carregar rotas da SUA loja Shopee
-try {
-  const myShopeeRoutes = require('./src/routes/my-shopee');
-  app.use('/api/my-shopee', myShopeeRoutes);
-  console.log('✅ Rotas da SUA loja Shopee carregadas com sucesso');
-} catch (error) {
-  console.error('❌ Erro ao carregar rotas da sua loja:', error.message);
-}
-try {
-  const shopeeRoutes = require('./src/routes/shopee');
-  app.use('/api/shopee', shopeeRoutes);
-  console.log('✅ Rotas da Shopee carregadas com sucesso');
-} catch (error) {
-  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
-}
+    const authUrl = `https://partner.test-stable.shopeemobile.com/api/v2/shop/auth_partner?partner_id=${partner_id}&timestamp=${timestamp}&redirect=${encodeURIComponent(redirect_url)}`;
 
-// Carregar rotas da SUA loja Shopee
-try {
-  const myShopeeRoutes = require('./src/routes/my-shopee');
-  app.use('/api/my-shopee', myShopeeRoutes);
-  console.log('✅ Rotas da SUA loja Shopee carregadas com sucesso');
-} catch (error) {
-  console.error('❌ Erro ao carregar rotas da sua loja:', error.message);
-}
-try {
-  const shopeeRoutes = require('./src/routes/shopee');
-  app.use('/api/shopee', shopeeRoutes);
-  console.log('✅ Rotas da Shopee carregadas com sucesso');
-} catch (error) {
-  console.error('❌ Erro ao carregar rotas da Shopee:', error.message);
-
-  // Fallback: criar rotas básicas da Shopee
-  app.get('/api/shopee/status', (req, res) => {
     res.json({
-      success: false,
-      message: 'Arquivo de rotas da Shopee não encontrado',
-      error: error.message,
-      fix: 'Verifique se o arquivo src/routes/shopee.js existe',
+      success: true,
+      auth_url: authUrl,
+      message: 'Clique no link para conectar SUA loja Shopee',
+      instructions: [
+        '1. Clique no auth_url abaixo',
+        '2. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
+        '3. Autorize o acesso aos seus produtos',
+        '4. Volte aqui para gerenciar sua loja',
+      ],
+      shop_info: {
+        partner_id: partner_id,
+        environment: 'sandbox',
+        redirect_url: redirect_url,
+      },
     });
-  });
-
-  app.get('/api/shopee/auth/url', (req, res) => {
-    res.json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: 'Arquivo de rotas da Shopee não encontrado',
+      message: 'Erro ao gerar URL de conexão',
       error: error.message,
     });
+  }
+});
+
+// Status da SUA loja
+app.get('/api/my-shopee/status', (req, res) => {
+  try {
+    const isConnected = false; // Por enquanto false, depois implementamos storage do access_token
+
+    res.json({
+      success: true,
+      connected: isConnected,
+      message: isConnected
+        ? 'Sua loja está conectada!'
+        : 'Conecte sua loja primeiro',
+      your_store: {
+        products_count: isConnected ? 'Carregando...' : 'Não conectado',
+        orders_pending: isConnected ? 'Carregando...' : 'Não conectado',
+        revenue_today: isConnected ? 'Carregando...' : 'Não conectado',
+      },
+      features: {
+        manage_products: isConnected,
+        update_prices: isConnected,
+        manage_promotions: isConnected,
+        control_stock: isConnected,
+        view_orders: isConnected,
+      },
+      next_step: isConnected
+        ? 'Gerencie seus produtos'
+        : 'Conecte sua loja usando /api/my-shopee/connect',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao verificar status',
+      error: error.message,
+    });
+  }
+});
+
+// SEUS produtos
+app.get('/api/my-shopee/products', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message:
+        'Conecte sua loja primeiro para ver seus milhares de produtos reais',
+      products: [],
+      total: 0,
+      pagination: {
+        page: 1,
+        limit: 50,
+        total_pages: 0,
+      },
+      when_connected: {
+        available_actions: [
+          'Listar todos os seus produtos',
+          'Atualizar preços em lote',
+          'Gerenciar estoque',
+          'Controlar promoções',
+          'Monitorar vendas',
+        ],
+      },
+      status: 'awaiting_connection',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar seus produtos',
+      error: error.message,
+    });
+  }
+});
+
+// Dashboard da SUA loja
+app.get('/api/my-shopee/dashboard', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Dashboard da SUA loja Shopee',
+      your_store_data: {
+        total_products: 'Conecte sua loja',
+        total_orders: 'Conecte sua loja',
+        total_revenue: 'Conecte sua loja',
+        pending_orders: 'Conecte sua loja',
+        low_stock_products: 'Conecte sua loja',
+        active_promotions: 'Conecte sua loja',
+      },
+      status: 'awaiting_connection',
+      note: 'Conecte sua loja para ver os dados reais dos seus milhares de produtos',
+      connect_url: '/api/my-shopee/connect',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao carregar dashboard',
+      error: error.message,
+    });
+  }
+});
+
+// SEUS pedidos
+app.get('/api/my-shopee/orders', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Pedidos da SUA loja',
+      orders: [],
+      total: 0,
+      status: 'awaiting_connection',
+      note: 'Conecte sua loja para ver seus pedidos reais',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar pedidos',
+      error: error.message,
+    });
+  }
+});
+
+// Atualizar preço (placeholder)
+app.put('/api/my-shopee/products/:product_id/price', (req, res) => {
+  const { product_id } = req.params;
+  const { new_price } = req.body;
+
+  res.json({
+    success: true,
+    message: `Preço do produto ${product_id} será atualizado para R$ ${new_price}`,
+    status: 'pending_connection',
+    note: 'Conecte sua loja primeiro para atualizar preços reais',
   });
-}
+});
+
+// ========================================
+// APIs ORIGINAIS
+// ========================================
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'COMPLETO_V2',
+    version: 'SUA_LOJA_V1',
     timestamp: new Date().toISOString(),
-    message: 'Shopee Manager funcionando perfeitamente!',
+    message: 'Shopee Manager - Gerenciador da SUA Loja funcionando!',
     features: [
-      'dashboard',
-      'shopee_integration',
-      'real_time_scraping',
-      'price_analysis',
-      'benchmarking',
-      'reports',
+      'sua_loja_shopee',
+      'gerenciar_produtos',
+      'atualizar_precos',
+      'controlar_estoque',
     ],
     environment: process.env.NODE_ENV || 'development',
     shopee_config: {
@@ -217,35 +280,14 @@ app.get('/api/health', (req, res) => {
       environment:
         process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
     },
-    routes_loaded: {
-      shopee:
-        !!require.cache[
-          require.resolve('./src/routes/shopee.js', { paths: [__dirname] })
-        ],
-    },
   });
 });
 
 app.get('/api/products', (req, res) => {
   res.json({
     success: true,
-    message: 'API de produtos funcionando',
-    products: [
-      {
-        id: 1,
-        name: 'Sofá 3 Lugares',
-        category: 'Móveis e Estofados',
-        price: 899.9,
-        stock: 15,
-      },
-      {
-        id: 2,
-        name: 'Mesa de Centro',
-        category: 'Móveis e Estofados',
-        price: 299.9,
-        stock: 8,
-      },
-    ],
+    message: 'Use /api/my-shopee/products para ver SEUS produtos reais',
+    redirect_to: '/api/my-shopee/products',
   });
 });
 
@@ -254,8 +296,8 @@ app.get('/api/benchmarking', (req, res) => {
     success: true,
     message: 'API de benchmarking funcionando',
     data: {
-      category: 'Móveis e Estofados',
-      competitors: 3,
+      category: 'Seus Produtos',
+      competitors: 'Análise disponível após conectar sua loja',
       last_update: new Date().toISOString(),
     },
   });
@@ -264,63 +306,14 @@ app.get('/api/benchmarking', (req, res) => {
 app.get('/api/reports', (req, res) => {
   res.json({
     success: true,
-    message: 'API de relatórios funcionando',
-    available_reports: ['sales', 'inventory', 'competitors'],
+    message: 'Relatórios da SUA loja',
+    available_reports: [
+      'vendas_sua_loja',
+      'estoque_seus_produtos',
+      'performance_produtos',
+    ],
+    note: 'Conecte sua loja para gerar relatórios reais',
   });
-});
-
-// ========================================
-// DEBUG ROUTES
-// ========================================
-app.get('/debug/files', (req, res) => {
-  const fs = require('fs');
-
-  try {
-    const srcPath = path.join(__dirname, 'src');
-    const files = fs.readdirSync(srcPath, { recursive: true });
-
-    res.json({
-      success: true,
-      src_directory: srcPath,
-      files: files,
-      total_files: files.length,
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      error: error.message,
-      src_directory: path.join(__dirname, 'src'),
-    });
-  }
-});
-
-app.get('/debug/shopee', (req, res) => {
-  const fs = require('fs');
-
-  try {
-    const shopeeRoutesPath = path.join(__dirname, 'src', 'routes', 'shopee.js');
-    const shopeeConfigPath = path.join(__dirname, 'src', 'config', 'shopee.js');
-
-    res.json({
-      success: true,
-      files_check: {
-        routes_exists: fs.existsSync(shopeeRoutesPath),
-        config_exists: fs.existsSync(shopeeConfigPath),
-        routes_path: shopeeRoutesPath,
-        config_path: shopeeConfigPath,
-      },
-      environment_vars: {
-        partner_id: process.env.SHOPEE_PARTNER_ID ? '***' : 'NOT_SET',
-        partner_key: process.env.SHOPEE_PARTNER_KEY ? '***' : 'NOT_SET',
-        node_env: process.env.NODE_ENV || 'development',
-      },
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      error: error.message,
-    });
-  }
 });
 
 // ========================================
@@ -335,17 +328,16 @@ app.use((req, res) => {
       '/',
       '/dashboard',
       '/api/health',
+      '/api/my-shopee/connect',
+      '/api/my-shopee/status',
+      '/api/my-shopee/products',
+      '/api/my-shopee/dashboard',
+      '/api/my-shopee/orders',
       '/api/products',
       '/api/benchmarking',
       '/api/reports',
-      '/api/shopee/status',
-      '/api/shopee/auth/url',
-      '/api/shopee/test',
-      '/api/shopee/products/search',
-      '/api/shopee/analysis/prices',
       '/auth/shopee/callback',
       '/debug/files',
-      '/debug/shopee',
     ],
   });
 });
@@ -359,9 +351,9 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🌟 Servidor rodando em http://localhost:${PORT}`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
-    console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
-    console.log(`🛍️ Shopee Status: http://localhost:${PORT}/api/shopee/status`);
-    console.log(`🔧 Debug Shopee: http://localhost:${PORT}/debug/shopee`);
+    console.log(
+      `🔗 Conectar SUA loja: http://localhost:${PORT}/api/my-shopee/connect`
+    );
   });
 }
 
