@@ -454,7 +454,7 @@ function displayCategoryBenchmark(data) {
                     <div class="competitor-item">
                         <div class="competitor-info">
                             <div class="competitor-name">
-                                ${index === 0 ? 'ðŸ†' : index === 1 ? 'ðŸ¥ˆ' : index === 2 ? 'ðŸ¥‰' : 'ðŸ“Š'} 
+                                ${index === 0 ? 'ðŸ†' : index === 1 ? 'ðŸ¥ˆ' : index === 2 ? 'ðŸ¥‰' : 'ðŸ“Š'}
                                 ${competitor.name}
                             </div>
                             <div class="competitor-details">
@@ -756,31 +756,31 @@ style.textContent = `
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.1); }
     }
-    
+
     @keyframes loading {
         0% { transform: translateX(-100%); }
         100% { transform: translateX(100%); }
     }
-    
+
     @keyframes slideInRight {
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
-    
+
     @keyframes slideOutRight {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
-    
+
     .fade-in-benchmark {
         animation: fadeInBenchmark 0.8s ease;
     }
-    
+
     @keyframes fadeInBenchmark {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .benchmark-metric {
         display: flex;
         justify-content: space-between;
@@ -788,23 +788,23 @@ style.textContent = `
         padding: 8px 0;
         border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .metric-label {
         color: #64748b;
         font-weight: 500;
     }
-    
+
     .metric-value {
         color: #2d3748;
         font-weight: 600;
     }
-    
+
     .competitor-list {
         display: flex;
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .competitor-item {
         display: flex;
         justify-content: space-between;
@@ -814,72 +814,72 @@ style.textContent = `
         border-radius: 8px;
         border-left: 4px solid #ee4d2d;
     }
-    
+
     .competitor-info {
         flex: 1;
     }
-    
+
     .competitor-name {
         font-weight: 600;
         color: #2d3748;
         margin-bottom: 4px;
     }
-    
+
     .competitor-details {
         font-size: 0.9rem;
         color: #64748b;
     }
-    
+
     .competitor-score {
         text-align: center;
         min-width: 60px;
     }
-    
+
     .score-value {
         font-size: 1.2rem;
         font-weight: 700;
         color: #ee4d2d;
     }
-    
+
     .score-label {
         font-size: 0.8rem;
         color: #64748b;
     }
-    
+
     .recommendation-list {
         display: flex;
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .recommendation-item {
         padding: 15px;
         border-radius: 10px;
         border-left: 4px solid;
     }
-    
+
     .recommendation-item.priority-alta {
         background: rgba(239, 68, 68, 0.05);
         border-left-color: #ef4444;
     }
-    
+
     .recommendation-item.priority-media {
         background: rgba(245, 158, 11, 0.05);
         border-left-color: #f59e0b;
     }
-    
+
     .recommendation-item.priority-baixa {
         background: rgba(34, 197, 94, 0.05);
         border-left-color: #22c55e;
     }
-    
+
     .recommendation-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
     }
-    
+
     .recommendation-title {
         font-weight: 600;
         color: #2d3748;
@@ -887,7 +887,7 @@ style.textContent = `
         align-items: center;
         gap: 8px;
     }
-    
+
     .recommendation-priority {
         padding: 4px 8px;
         border-radius: 12px;
@@ -895,46 +895,46 @@ style.textContent = `
         font-weight: 600;
         text-transform: uppercase;
     }
-    
+
     .recommendation-priority.alta {
         background: #ef4444;
         color: white;
     }
-    
+
     .recommendation-priority.media {
         background: #f59e0b;
         color: white;
     }
-    
+
     .recommendation-priority.baixa {
         background: #22c55e;
         color: white;
     }
-    
+
     .recommendation-description {
         color: #64748b;
         margin-bottom: 8px;
         line-height: 1.5;
     }
-    
+
     .recommendation-action {
         color: #2d3748;
         font-weight: 500;
     }
-    
+
     .opportunity-list {
         display: flex;
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .opportunity-item {
         padding: 12px;
         background: rgba(72, 187, 120, 0.05);
         border-radius: 8px;
         border-left: 4px solid #48bb78;
     }
-    
+
     .opportunity-title {
         font-weight: 600;
         color: #2d3748;
@@ -943,7 +943,7 @@ style.textContent = `
         align-items: center;
         gap: 8px;
     }
-    
+
     .opportunity-description {
         color: #64748b;
         line-height: 1.5;
@@ -1124,7 +1124,7 @@ function displayPriceAnalysis(analysis) {
 
   container.innerHTML = `
     <h3><i class="fas fa-chart-line"></i> Análise de Preços - ${analysis.category}</h3>
-    
+
     <div class="stats-grid">
       <div class="stat-card">
         <h4>Preço Médio</h4>
@@ -1143,7 +1143,7 @@ function displayPriceAnalysis(analysis) {
         <span class="stat-value">${analysis.total_products}</span>
       </div>
     </div>
-    
+
     <div class="recommendations">
       <h4><i class="fas fa-lightbulb"></i> Recomendações</h4>
       ${analysis.recommendations
@@ -1221,4 +1221,342 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('shopee')?.classList.contains('active')) {
     loadShopeeStatus();
   }
-});
+}); // ========================================
+// FUNÇÕES AUXILIARES
+// ========================================
+
+// Mostrar loading
+function showLoading(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.innerHTML = `
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Carregando...</p>
+      </div>
+    `;
+  }
+}
+
+// Mostrar notificação
+function showNotification(message, type = 'info') {
+  // Remover notificação anterior se existir
+  const existingNotification = document.querySelector('.notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  // Criar nova notificação
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <div class="notification-content">
+      <span class="notification-icon">
+        ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}
+      </span>
+      <span class="notification-message">${message}</span>
+      <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+    </div>
+  `;
+
+  // Adicionar ao body
+  document.body.appendChild(notification);
+
+  // Auto-remover após 5 segundos
+  setTimeout(() => {
+    if (notification && notification.parentElement) {
+      notification.remove();
+    }
+  }, 5000);
+}
+
+// Função para criar elementos se não existirem
+function ensureElement(id, className = '', parent = null) {
+  let element = document.getElementById(id);
+  if (!element) {
+    element = document.createElement('div');
+    element.id = id;
+    element.className = className;
+
+    const parentElement =
+      parent || document.querySelector('.tab-content.active') || document.body;
+    parentElement.appendChild(element);
+  }
+  return element;
+}
+
+// ========================================
+// SISTEMA DE ABAS
+// ========================================
+
+function showTab(tabName) {
+  // Esconder todas as abas
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  // Remover classe active de todos os botões
+  const tabButtons = document.querySelectorAll('.tab-button');
+  tabButtons.forEach(button => {
+    button.classList.remove('active');
+  });
+
+  // Mostrar aba selecionada
+  const selectedTab = document.getElementById(tabName);
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  }
+
+  // Ativar botão correspondente
+  const selectedButton = document.querySelector(`[data-tab="${tabName}"]`);
+  if (selectedButton) {
+    selectedButton.classList.add('active');
+  }
+
+  // Carregar conteúdo específico da aba
+  loadTabContent(tabName);
+}
+
+function loadTabContent(tabName) {
+  switch (tabName) {
+    case 'dashboard':
+      loadDashboardData();
+      break;
+    case 'products':
+      loadProducts();
+      break;
+    case 'benchmarking':
+      loadBenchmarkingData();
+      break;
+    case 'shopee':
+      loadShopeeStatus();
+      break;
+    case 'reports':
+      loadReports();
+      break;
+  }
+}
+
+// ========================================
+// FUNÇÕES DE CARREGAMENTO DE DADOS
+// ========================================
+
+async function loadDashboardData() {
+  try {
+    showLoading('dashboard-overview');
+
+    const response = await fetch('/api/health');
+    const data = await response.json();
+
+    const overviewElement = document.getElementById('dashboard-overview');
+    if (overviewElement) {
+      overviewElement.innerHTML = `
+        <div class="overview-cards">
+          <div class="overview-card">
+            <h3>Status do Sistema</h3>
+            <p class="status-ok">${data.status.toUpperCase()}</p>
+            <small>Versão: ${data.version}</small>
+          </div>
+          <div class="overview-card">
+            <h3>Ambiente</h3>
+            <p>${data.environment}</p>
+            <small>Última atualização: ${new Date(data.timestamp).toLocaleString('pt-BR')}</small>
+          </div>
+          <div class="overview-card">
+            <h3>Recursos Ativos</h3>
+            <p>${data.features.length} módulos</p>
+            <small>${data.features.join(', ')}</small>
+          </div>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar dashboard:', error);
+    showNotification('Erro ao carregar dados do dashboard', 'error');
+  }
+}
+
+async function loadProducts() {
+  try {
+    showLoading('products-list');
+
+    const response = await fetch('/api/products');
+    const data = await response.json();
+
+    const productsElement = ensureElement(
+      'products-list',
+      'products-container'
+    );
+
+    if (data.success) {
+      productsElement.innerHTML = `
+        <div class="products-header">
+          <h3>📦 Produtos (${data.products.length})</h3>
+          <button class="btn btn-primary" onclick="addProduct()">
+            <i class="fas fa-plus"></i> Adicionar Produto
+          </button>
+        </div>
+        <div class="products-grid">
+          ${data.products
+            .map(
+              product => `
+            <div class="product-card">
+              <div class="product-info">
+                <h4>${product.name}</h4>
+                <p class="category">${product.category}</p>
+                <div class="product-stats">
+                  <span class="price">R$ ${product.price.toFixed(2)}</span>
+                  <span class="stock">Estoque: ${product.stock}</span>
+                </div>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-sm btn-secondary" onclick="editProduct(${product.id})">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct(${product.id})">
+                  <i class="fas fa-trash"></i> Excluir
+                </button>
+              </div>
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+      `;
+    } else {
+      productsElement.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Erro ao carregar produtos: ${data.message}</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar produtos:', error);
+    showNotification('Erro ao carregar produtos', 'error');
+  }
+}
+
+async function loadBenchmarkingData() {
+  try {
+    showLoading('benchmarking-content');
+
+    const response = await fetch('/api/benchmarking');
+    const data = await response.json();
+
+    const benchmarkingElement = ensureElement(
+      'benchmarking-content',
+      'benchmarking-container'
+    );
+
+    if (data.success) {
+      benchmarkingElement.innerHTML = `
+        <div class="benchmarking-header">
+          <h3>📊 Análise Competitiva</h3>
+          <button class="btn btn-primary" onclick="runBenchmarkAnalysis()">
+            <i class="fas fa-chart-bar"></i> Executar Análise
+          </button>
+        </div>
+        <div class="benchmarking-info">
+          <div class="info-card">
+            <h4>Categoria Ativa</h4>
+            <p>${data.data.category}</p>
+          </div>
+          <div class="info-card">
+            <h4>Concorrentes</h4>
+            <p>${data.data.competitors} encontrados</p>
+          </div>
+          <div class="info-card">
+            <h4>Última Atualização</h4>
+            <p>${new Date(data.data.last_update).toLocaleString('pt-BR')}</p>
+          </div>
+        </div>
+        <div id="benchmark-results"></div>
+      `;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar benchmarking:', error);
+    showNotification('Erro ao carregar análise competitiva', 'error');
+  }
+}
+
+async function loadReports() {
+  try {
+    showLoading('reports-content');
+
+    const response = await fetch('/api/reports');
+    const data = await response.json();
+
+    const reportsElement = ensureElement(
+      'reports-content',
+      'reports-container'
+    );
+
+    if (data.success) {
+      reportsElement.innerHTML = `
+        <div class="reports-header">
+          <h3>📈 Relatórios</h3>
+          <button class="btn btn-primary" onclick="generateReport()">
+            <i class="fas fa-file-alt"></i> Gerar Relatório
+          </button>
+        </div>
+        <div class="reports-list">
+          <h4>Relatórios Disponíveis:</h4>
+          <ul>
+            ${data.available_reports
+              .map(
+                report => `
+              <li>
+                <span>${report}</span>
+                <button class="btn btn-sm btn-secondary" onclick="downloadReport('${report}')">
+                  <i class="fas fa-download"></i> Baixar
+                </button>
+              </li>
+            `
+              )
+              .join('')}
+          </ul>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar relatórios:', error);
+    showNotification('Erro ao carregar relatórios', 'error');
+  }
+}
+
+// ========================================
+// FUNÇÕES DE AÇÃO
+// ========================================
+
+function addProduct() {
+  showNotification(
+    'Funcionalidade de adicionar produto em desenvolvimento',
+    'info'
+  );
+}
+
+function editProduct(id) {
+  showNotification(`Editando produto ID: ${id}`, 'info');
+}
+
+function deleteProduct(id) {
+  if (confirm('Tem certeza que deseja excluir este produto?')) {
+    showNotification(`Produto ID: ${id} excluído`, 'success');
+  }
+}
+
+function runBenchmarkAnalysis() {
+  showNotification('Executando análise competitiva...', 'info');
+  // Aqui você pode chamar a função da Shopee
+  runShopeeAnalysis();
+}
+
+function generateReport() {
+  showNotification('Gerando relatório...', 'info');
+}
+
+function downloadReport(type) {
+  showNotification(`Baixando relatório: ${type}`, 'info');
+}

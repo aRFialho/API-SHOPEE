@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    SHOPEE MANAGER - Dashboard Styles
    Fundo Animado com Logo Shopee
    ======================================== */
@@ -146,7 +146,7 @@ body::before {
 }
 
 /* ========================================
-   PARTÍCULAS ANIMADAS
+   PARTÃCULAS ANIMADAS
    ======================================== */
 
 .particles {
@@ -341,7 +341,7 @@ body::before {
 }
 
 /* ========================================
-   BOTÕES COM TEMA SHOPEE
+   BOTÃ•ES COM TEMA SHOPEE
    ======================================== */
 
 .btn {
@@ -415,7 +415,7 @@ body::before {
 }
 
 /* ========================================
-   NAVEGAÇÃO COM TEMA SHOPEE
+   NAVEGAÃ‡ÃƒO COM TEMA SHOPEE
    ======================================== */
 
 .nav-tabs {
@@ -718,7 +718,7 @@ body::before {
 }
 
 /* ========================================
-   ANIMAÇÕES EXTRAS
+   ANIMAÃ‡Ã•ES EXTRAS
    ======================================== */
 
 .pulse {
@@ -971,7 +971,7 @@ body::before {
     padding: 25px;
 }
 
-/* Estilos específicos para diferentes tipos de cards */
+/* Estilos especÃ­ficos para diferentes tipos de cards */
 .executive-summary {
     grid-column: 1 / -1;
 }
@@ -981,7 +981,7 @@ body::before {
     min-height: 400px;
 }
 
-/* Métricas de Benchmarking */
+/* MÃ©tricas de Benchmarking */
 .benchmark-metric {
     display: flex;
     justify-content: space-between;
@@ -1121,7 +1121,7 @@ body::before {
     line-height: 1.5;
 }
 
-/* Lista de Recomendações */
+/* Lista de RecomendaÃ§Ãµes */
 .recommendation-list {
     display: flex;
     flex-direction: column;
@@ -1253,7 +1253,7 @@ body::before {
     }
 }
 
-/* Animações */
+/* AnimaÃ§Ãµes */
 .benchmark-card {
     animation: slideInUp 0.6s ease;
 }
@@ -1286,7 +1286,7 @@ body::before {
    MELHORIAS DE LEGIBILIDADE - FUNDO BRANCO
    ======================================== */
 
-/* Fundo branco para todas as seções de benchmarking */
+/* Fundo branco para todas as seÃ§Ãµes de benchmarking */
 .benchmark-results,
 .benchmark-cards,
 .benchmark-card,
@@ -1330,14 +1330,14 @@ body::before {
     gap: 8px;
 }
 
-/* Conteúdo dos cards com fundo branco */
+/* ConteÃºdo dos cards com fundo branco */
 .benchmark-card .card-content {
     background: white;
     padding: 0;
     color: #2d3748;
 }
 
-/* Métricas com melhor contraste */
+/* MÃ©tricas com melhor contraste */
 .benchmark-metric {
     display: flex;
     justify-content: space-between;
@@ -1432,7 +1432,7 @@ body::before {
     letter-spacing: 0.5px;
 }
 
-/* Recomendações com fundo branco */
+/* RecomendaÃ§Ãµes com fundo branco */
 .recommendation-list {
     display: flex;
     flex-direction: column;
@@ -1605,7 +1605,7 @@ body::before {
     font-size: 1.2rem;
 }
 
-/* Gráfico com fundo branco */
+/* GrÃ¡fico com fundo branco */
 .positioning-chart .card-content {
     background: white;
     padding: 20px;
@@ -1649,7 +1649,7 @@ body::before {
     }
 }
 
-/* Animações suaves */
+/* AnimaÃ§Ãµes suaves */
 .fade-in-benchmark {
     animation: fadeInBenchmark 0.8s ease;
 }
@@ -1678,7 +1678,7 @@ body::before {
     margin-bottom: 10px;
 }
 
-/* Segmentos de preço com fundo branco */
+/* Segmentos de preÃ§o com fundo branco */
 .price-segment {
     display: flex;
     justify-content: space-between;
@@ -1764,7 +1764,7 @@ body::before {
     font-size: 1.3rem;
 }
 
-/* Conteúdo dos cards com fundo branco garantido */
+/* ConteÃºdo dos cards com fundo branco garantido */
 .benchmark-card .card-content {
     background: white !important;
     padding: 25px;
@@ -1772,7 +1772,7 @@ body::before {
     min-height: 200px;
 }
 
-/* Cards específicos */
+/* Cards especÃ­ficos */
 .benchmark-card.executive-summary .card-content {
     background: white !important;
 }
@@ -1797,7 +1797,7 @@ body::before {
     background: white !important;
 }
 
-/* Métricas dentro dos cards */
+/* MÃ©tricas dentro dos cards */
 .benchmark-card .benchmark-metric {
     display: flex;
     justify-content: space-between;
@@ -1889,7 +1889,7 @@ body::before {
     margin-top: 4px;
 }
 
-/* Lista de recomendações */
+/* Lista de recomendaÃ§Ãµes */
 .benchmark-card .recommendation-list {
     background: white;
     padding: 0;
@@ -2042,7 +2042,7 @@ body::before {
     font-size: 0.95rem;
 }
 
-/* Gráfico de posicionamento */
+/* GrÃ¡fico de posicionamento */
 .benchmark-card.positioning-chart .card-content {
     background: white !important;
     padding: 25px;
@@ -2054,7 +2054,7 @@ body::before {
     padding: 10px;
 }
 
-/* Seções especiais dentro dos cards */
+/* SeÃ§Ãµes especiais dentro dos cards */
 .benchmark-card h4 {
     color: #ee4d2d;
     font-weight: 700;
@@ -2072,7 +2072,7 @@ body::before {
     font-size: 1rem;
 }
 
-/* Segmentos de preço */
+/* Segmentos de preÃ§o */
 .benchmark-card .price-segment {
     display: flex;
     justify-content: space-between;
@@ -2157,7 +2157,7 @@ body::before {
     }
 }
 
-/* Animação de entrada para os cards */
+/* AnimaÃ§Ã£o de entrada para os cards */
 .benchmark-cards.fade-in-benchmark .benchmark-card {
     animation: fadeInCard 0.6s ease forwards;
 }
@@ -2206,7 +2206,7 @@ body::before {
     background-color: white;
 }
 
-/* Exceções para elementos que precisam de cores específicas */
+/* ExceÃ§Ãµes para elementos que precisam de cores especÃ­ficas */
 .benchmark-card .card-header,
 .benchmark-card .card-header *,
 .benchmark-card .competitor-score,
@@ -2214,3 +2214,275 @@ body::before {
 .benchmark-card .recommendation-impact {
     background-color: initial;
 }
+/* ========================================
+   LOADING E NOTIFICAÇÕES
+   ======================================== */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification.success {
+  border-left: 4px solid #28a745;
+}
+
+.notification.error {
+  border-left: 4px solid #dc3545;
+}
+
+.notification.warning {
+  border-left: 4px solid #ffc107;
+}
+
+.notification.info {
+  border-left: 4px solid #17a2b8;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+}
+
+.notification-icon {
+  font-size: 1.2em;
+  margin-right: 10px;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-close:hover {
+  color: #333;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   CARDS E CONTAINERS
+   ======================================== */
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.overview-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-left: 4px solid #007bff;
+}
+
+.overview-card h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.overview-card p {
+  margin: 5px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.overview-card small {
+  color: #666;
+  font-size: 12px;
+}
+
+.status-ok {
+  color: #28a745 !important;
+}
+
+.products-header,
+.benchmarking-header,
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: transform 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.product-info h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.product-info .category {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.product-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.product-stats .price {
+  font-weight: bold;
+  color: #28a745;
+  font-size: 16px;
+}
+
+.product-stats .stock {
+  color: #666;
+  font-size: 14px;
+}
+
+.product-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #1e7e34;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #dc3545;
+}
+
+.error-message i {
+  font-size: 2em;
+  margin-bottom: 10px;
+  display: block;
+}
+
