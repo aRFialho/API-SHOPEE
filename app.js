@@ -2,7 +2,7 @@
 const path = require('path');
 const app = express();
 
-console.log('�� Shopee Manager - Versão Completa');
+console.log('🚀 Iniciando Shopee Manager - Versão Completa');
 
 app.use(express.json());
 
@@ -29,20 +29,137 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   const dashboardPath = path.join(__dirname, 'src', 'views', 'dashboard.html');
-  console.log('📊 Servindo dashboard:', dashboardPath);
+  console.log('📄 Servindo dashboard:', dashboardPath);
   res.sendFile(dashboardPath);
+});
+
+// Callback da Shopee
+app.get('/auth/shopee/callback', (req, res) => {
+  const { code, shop_id } = req.query;
+
+  if (code && shop_id) {
+    console.log('✅ Autorização Shopee recebida:', {
+      code: code.substring(0, 10) + '...',
+      shop_id,
+    });
+
+    res.send(`
+      <html>
+        <head>
+          <title>Shopee - Autorização Concluída</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              margin: 0;
+            }
+            .container {
+              background: rgba(255,255,255,0.1);
+              padding: 40px;
+              border-radius: 15px;
+              backdrop-filter: blur(10px);
+              max-width: 500px;
+              margin: 0 auto;
+            }
+            h1 { font-size: 2.5em; margin-bottom: 20px; }
+            .success-icon { font-size: 4em; margin-bottom: 20px; }
+            .info { background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0; }
+            .countdown { font-size: 1.2em; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">🎉</div>
+            <h1>Autorização Shopee Concluída!</h1>
+            <div class="info">
+              <p><strong>Shop ID:</strong> ${shop_id}</p>
+              <p><strong>Code:</strong> ${code.substring(0, 20)}...</p>
+            </div>
+            <p>Sua loja foi conectada com sucesso ao Shopee Manager!</p>
+            <div class="countdown">
+              Esta janela será fechada em <span id="timer">5</span> segundos...
+            </div>
+          </div>
+          <script>
+            let countdown = 5;
+            const timer = document.getElementById('timer');
+            const interval = setInterval(() => {
+              countdown--;
+              timer.textContent = countdown;
+              if (countdown <= 0) {
+                clearInterval(interval);
+                window.close();
+              }
+            }, 1000);
+          </script>
+        </body>
+      </html>
+    `);
+  } else {
+    res.status(400).send(`
+      <html>
+        <head>
+          <title>Shopee - Erro na Autorização</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+              color: white;
+              margin: 0;
+            }
+            .container {
+              background: rgba(255,255,255,0.1);
+              padding: 40px;
+              border-radius: 15px;
+              backdrop-filter: blur(10px);
+              max-width: 500px;
+              margin: 0 auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>❌ Erro na Autorização</h1>
+            <p>Parâmetros inválidos recebidos da Shopee.</p>
+            <p>Tente novamente ou entre em contato com o suporte.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // ========================================
 // APIs
 // ========================================
+const shopeeRoutes = require('./src/routes/shopee');
+app.use('/api/shopee', shopeeRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     version: 'COMPLETO_V1',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager funcionando perfeitamente!',
-    features: ['dashboard', 'products', 'benchmarking', 'reports'],
+    features: [
+      'dashboard',
+      'shopee_integration',
+      'real_time_scraping',
+      'price_analysis',
+      'benchmarking',
+      'reports',
+    ],
+    environment: process.env.NODE_ENV || 'development',
+    shopee_config: {
+      partner_id: process.env.SHOPEE_PARTNER_ID ? '***' : 'NOT_SET',
+      environment:
+        process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+    },
   });
 });
 
@@ -129,9 +246,29 @@ app.use((req, res) => {
       '/api/products',
       '/api/benchmarking',
       '/api/reports',
+      '/api/shopee/status',
+      '/api/shopee/test',
+      '/api/shopee/products/search',
+      '/api/shopee/analysis/prices',
+      '/api/shopee/auth/url',
+      '/auth/shopee/callback',
       '/debug/files',
     ],
   });
 });
+
+// ========================================
+// SERVIDOR
+// ========================================
+const PORT = process.env.PORT || 3000;
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🌟 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+    console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`🛍️ Shopee Status: http://localhost:${PORT}/api/shopee/status`);
+  });
+}
 
 module.exports = app;

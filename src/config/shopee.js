@@ -1,10 +1,5 @@
-// ========================================
-// CONFIGURAÇÃO DA API SHOPEE
-// Shopee Open Platform Integration
-// ========================================
-
-const crypto = require('crypto-js');
-const axios = require('axios');
+﻿// Configuração da API Shopee
+const crypto = require('crypto');
 
 // URLs da API Shopee
 const SHOPEE_API_BASE = {
@@ -14,22 +9,24 @@ const SHOPEE_API_BASE = {
 
 // Configurações da aplicação
 const SHOPEE_CONFIG = {
-  partner_id: process.env.SHOPEE_PARTNER_ID,
-  partner_key: process.env.SHOPEE_PARTNER_KEY,
+  partner_id: process.env.SHOPEE_PARTNER_ID || '1185765',
+  partner_key:
+    process.env.SHOPEE_PARTNER_KEY ||
+    'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
   redirect_url:
     process.env.SHOPEE_REDIRECT_URL ||
-    'http://localhost:3000/auth/shopee/callback',
+    'https://shopee-manager-fpwfu79n3-raphaels-projects-11cd9f6b.vercel.app/auth/shopee/callback',
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
 
   // Scopes necessários
   scopes: [
-    'item.base', // Informações básicas de produtos
-    'item.fullinfo', // Informações completas de produtos
-    'order.base', // Informações básicas de pedidos
-    'order.details', // Detalhes completos de pedidos
-    'logistics.base', // Informações de logística
-    'shop.base', // Informações básicas da loja
-    'promotion.base', // Informações de promoções
+    'item.base',
+    'item.fullinfo',
+    'order.base',
+    'order.details',
+    'logistics.base',
+    'shop.base',
+    'promotion.base',
   ],
 };
 
@@ -48,7 +45,10 @@ const generateSignature = (path, timestamp, accessToken = '', shopId = '') => {
     baseString += shopId;
   }
 
-  return crypto.HmacSHA256(baseString, partnerKey).toString();
+  return crypto
+    .createHmac('sha256', partnerKey)
+    .update(baseString)
+    .digest('hex');
 };
 
 // Função para gerar URL de autorização
@@ -58,7 +58,6 @@ const generateAuthUrl = () => {
   const signature = generateSignature(path, timestamp);
 
   const baseUrl = SHOPEE_API_BASE[SHOPEE_CONFIG.environment];
-  const scopes = SHOPEE_CONFIG.scopes.join(',');
 
   return `${baseUrl}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
@@ -71,6 +70,8 @@ const makeAuthenticatedRequest = async (
   accessToken = '',
   shopId = ''
 ) => {
+  const axios = require('axios');
+
   try {
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = generateSignature(path, timestamp, accessToken, shopId);
@@ -100,6 +101,11 @@ const makeAuthenticatedRequest = async (
       config.data = data;
     }
 
+    console.log('🔗 Shopee Request:', {
+      url,
+      params: { ...params, sign: signature.substring(0, 10) + '...' },
+    });
+
     const response = await axios(config);
     return response.data;
   } catch (error) {
@@ -111,35 +117,44 @@ const makeAuthenticatedRequest = async (
   }
 };
 
-// Função para obter access token
-const getAccessToken = async (code, shopId) => {
-  const path = '/api/v2/auth/token/get';
-  const data = {
-    code,
-    shop_id: parseInt(shopId),
-    partner_id: parseInt(SHOPEE_CONFIG.partner_id),
-  };
+// Função para testar conexão
+const testConnection = async () => {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/shop/get_shop_info';
 
-  return await makeAuthenticatedRequest(path, 'POST', data);
-};
+    // Para teste, vamos tentar sem shop_id primeiro
+    const signature = generateSignature(path, timestamp);
+    const baseUrl = SHOPEE_API_BASE[SHOPEE_CONFIG.environment];
 
-// Função para renovar access token
-const refreshAccessToken = async (refreshToken, shopId) => {
-  const path = '/api/v2/auth/access_token/get';
-  const data = {
-    refresh_token: refreshToken,
-    shop_id: parseInt(shopId),
-    partner_id: parseInt(SHOPEE_CONFIG.partner_id),
-  };
+    console.log('🧪 Testando conexão Shopee...');
+    console.log('Partner ID:', SHOPEE_CONFIG.partner_id);
+    console.log('Environment:', SHOPEE_CONFIG.environment);
+    console.log('Base URL:', baseUrl);
 
-  return await makeAuthenticatedRequest(path, 'POST', data);
+    return {
+      success: true,
+      message: 'Credenciais configuradas corretamente',
+      config: {
+        partner_id: SHOPEE_CONFIG.partner_id,
+        environment: SHOPEE_CONFIG.environment,
+        base_url: baseUrl,
+        auth_url: generateAuthUrl(),
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+      error: error,
+    };
+  }
 };
 
 module.exports = {
   SHOPEE_CONFIG,
   generateAuthUrl,
   makeAuthenticatedRequest,
-  getAccessToken,
-  refreshAccessToken,
   generateSignature,
+  testConnection,
 };
