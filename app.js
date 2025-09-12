@@ -9,8 +9,8 @@ app.use(express.json());
 // CONFIGURA��O COM DOM�NIO FIXO
 // ========================================
 const FIXED_DOMAIN =
-  'https://shopee-manager-6numqq219-raphaels-projects-11cd9f6b.vercel.app';
-('https://shopee-manager-6numqq219-raphaels-projects-11cd9f6b.vercel.app');
+  'https://shopee-manager-khdftr125-raphaels-projects-11cd9f6b.vercel.app';
+('https://shopee-manager-khdftr125-raphaels-projects-11cd9f6b.vercel.app');
 
 const SHOPEE_CONFIG = {
   partner_id: '1185765',
