@@ -13,7 +13,7 @@ const FIXED_DOMAIN = process.env.VERCEL_URL
   : 'http://localhost:3000';
 
 const SHOPEE_CONFIG = {
-  partner_id: '1185765',
+  partner_id: '2012740',
   partner_key:
     'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43', // ✅ NOVA KEY
   redirect_url: `${FIXED_DOMAIN}/auth/shopee/callback`,
