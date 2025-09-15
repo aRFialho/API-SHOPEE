@@ -64,10 +64,11 @@ const generateAuthUrl = () => {
 };
 
 // Função para gerar access token (COM DEBUG)
+// Função para gerar access token (ENDPOINT CORRETO)
 const generateAccessToken = async (code, shopId) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
-    const path = '/api/v2/auth/token';
+    const path = '/api/v2/auth/access_token'; // ENDPOINT CORRETO
     const signature = generateSignature(path, timestamp);
 
     const requestData = {
@@ -84,12 +85,10 @@ const generateAccessToken = async (code, shopId) => {
 
     const fullUrl = `${SHOPEE_CONFIG.api_base}${path}`;
 
-    console.log('🔑 GERANDO ACCESS TOKEN - DEBUG COMPLETO:');
+    console.log('🔑 GERANDO ACCESS TOKEN - ENDPOINT CORRETO:');
     console.log('📍 URL:', fullUrl);
-    console.log('📦 Body:', requestData);
+    console.log('�� Body:', requestData);
     console.log('🔗 Params:', requestParams);
-    console.log('🔐 Signature:', signature);
-    console.log('⏰ Timestamp:', timestamp);
 
     const response = await axios.post(fullUrl, requestData, {
       params: requestParams,
@@ -97,15 +96,12 @@ const generateAccessToken = async (code, shopId) => {
     });
 
     console.log('✅ Access token gerado com sucesso!');
-    console.log('📋 Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ ERRO DETALHADO:');
-    console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}/api/v2/auth/token`);
+    console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}${path}`);
     console.error('📊 Status:', error.response?.status);
-    console.error('📋 Headers:', error.response?.headers);
     console.error('💬 Data:', error.response?.data);
-    console.error('🔍 Config:', error.config);
 
     throw new Error(
       `Erro ao gerar access token: ${error.response?.status} - ${JSON.stringify(error.response?.data) || error.message}`
@@ -165,6 +161,50 @@ const saveConnection = async (shopId, authCode, tokenData, shopInfo) => {
 // ========================================
 // ENDPOINT DE TESTE SHOPEE
 // ========================================
+app.get('/api/test-api-bases', async (req, res) => {
+  const apiBases = [
+    'https://partner.shopeemobile.com',
+    'https://partner.test-stable.shopeemobile.com', // Sandbox
+    'https://partner.uat.shopeemobile.com', // UAT
+  ];
+
+  const results = [];
+
+  for (const apiBase of apiBases) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/auth/access_token';
+    const signature = generateSignature(path, timestamp);
+
+    try {
+      const response = await axios.get(`${apiBase}${path}`, {
+        params: {
+          partner_id: SHOPEE_CONFIG.partner_id,
+          timestamp: timestamp,
+          sign: signature,
+        },
+        timeout: 10000,
+      });
+
+      results.push({
+        api_base: apiBase,
+        status: 'success',
+        data: response.data,
+      });
+    } catch (error) {
+      results.push({
+        api_base: apiBase,
+        status: 'error',
+        error: error.response?.status,
+        message: error.response?.data || error.message,
+      });
+    }
+  }
+
+  res.json({
+    message: 'Teste de diferentes API bases',
+    results: results,
+  });
+});
 app.get('/api/test-shopee', async (req, res) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
