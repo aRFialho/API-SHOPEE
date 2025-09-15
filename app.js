@@ -63,7 +63,6 @@ const generateAuthUrl = () => {
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
 
-// Função para gerar access token (COM DEBUG)
 // Função para gerar access token (ENDPOINT CORRETO)
 const generateAccessToken = async (code, shopId) => {
   try {
@@ -87,7 +86,7 @@ const generateAccessToken = async (code, shopId) => {
 
     console.log('🔑 GERANDO ACCESS TOKEN - ENDPOINT CORRETO:');
     console.log('📍 URL:', fullUrl);
-    console.log('�� Body:', requestData);
+    console.log('📦 Body:', requestData);
     console.log('🔗 Params:', requestParams);
 
     const response = await axios.post(fullUrl, requestData, {
@@ -159,57 +158,14 @@ const saveConnection = async (shopId, authCode, tokenData, shopInfo) => {
 };
 
 // ========================================
-// ENDPOINT DE TESTE SHOPEE
+// ENDPOINTS DE TESTE
 // ========================================
-app.get('/api/test-api-bases', async (req, res) => {
-  const apiBases = [
-    'https://partner.shopeemobile.com',
-    'https://partner.test-stable.shopeemobile.com', // Sandbox
-    'https://partner.uat.shopeemobile.com', // UAT
-  ];
 
-  const results = [];
-
-  for (const apiBase of apiBases) {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const path = '/api/v2/auth/access_token';
-    const signature = generateSignature(path, timestamp);
-
-    try {
-      const response = await axios.get(`${apiBase}${path}`, {
-        params: {
-          partner_id: SHOPEE_CONFIG.partner_id,
-          timestamp: timestamp,
-          sign: signature,
-        },
-        timeout: 10000,
-      });
-
-      results.push({
-        api_base: apiBase,
-        status: 'success',
-        data: response.data,
-      });
-    } catch (error) {
-      results.push({
-        api_base: apiBase,
-        status: 'error',
-        error: error.response?.status,
-        message: error.response?.data || error.message,
-      });
-    }
-  }
-
-  res.json({
-    message: 'Teste de diferentes API bases',
-    results: results,
-  });
-});
+// Teste de endpoints Shopee
 app.get('/api/test-shopee', async (req, res) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // Testar diferentes endpoints
     const endpoints = [
       '/api/v2/auth/token',
       '/api/v2/auth/access_token',
@@ -259,6 +215,94 @@ app.get('/api/test-shopee', async (req, res) => {
       message: error.message,
     });
   }
+});
+
+// Teste de diferentes API bases
+app.get('/api/test-api-bases', async (req, res) => {
+  const apiBases = [
+    'https://partner.shopeemobile.com',
+    'https://partner.test-stable.shopeemobile.com',
+    'https://partner.uat.shopeemobile.com',
+  ];
+
+  const results = [];
+
+  for (const apiBase of apiBases) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/auth/access_token';
+    const signature = generateSignature(path, timestamp);
+
+    try {
+      const response = await axios.get(`${apiBase}${path}`, {
+        params: {
+          partner_id: SHOPEE_CONFIG.partner_id,
+          timestamp: timestamp,
+          sign: signature,
+        },
+        timeout: 10000,
+      });
+
+      results.push({
+        api_base: apiBase,
+        status: 'success',
+        data: response.data,
+      });
+    } catch (error) {
+      results.push({
+        api_base: apiBase,
+        status: 'error',
+        error: error.response?.status,
+        message: error.response?.data || error.message,
+      });
+    }
+  }
+
+  res.json({
+    message: 'Teste de diferentes API bases',
+    results: results,
+  });
+});
+
+// Teste com diferentes partners
+app.get('/api/test-partners', (req, res) => {
+  const partners = [
+    {
+      id: '2012740',
+      key: 'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43',
+      name: 'Partner Atual',
+    },
+    {
+      id: '1185765',
+      key: 'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
+      name: 'Partner do Contexto',
+    },
+  ];
+
+  const results = partners.map(partner => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/shop/auth_partner';
+
+    const baseString = `${partner.id}${path}${timestamp}`;
+    const signature = crypto
+      .createHmac('sha256', partner.key)
+      .update(baseString)
+      .digest('hex');
+
+    const authUrl = `https://partner.shopeemobile.com${path}?partner_id=${partner.id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
+
+    return {
+      name: partner.name,
+      partner_id: partner.id,
+      auth_url: authUrl,
+      signature: signature,
+    };
+  });
+
+  res.json({
+    message: 'Teste com diferentes partners',
+    current_domain: FIXED_DOMAIN,
+    partners: results,
+  });
 });
 
 // ========================================
@@ -339,15 +383,9 @@ app.get('/dashboard', (req, res) => {
   const fs = require('fs');
   const dashboardPath = path.join(__dirname, 'src', 'views', 'dashboard.html');
 
-  console.log('📁 Dashboard path:', dashboardPath);
-  console.log('📁 __dirname:', __dirname);
-
-  // Verificar se arquivo existe
   if (fs.existsSync(dashboardPath)) {
-    console.log('✅ dashboard.html encontrado!');
     res.sendFile(dashboardPath);
   } else {
-    console.log('❌ dashboard.html NÃO encontrado!');
     res.status(404).send(`
       <!DOCTYPE html>
       <html>
@@ -359,31 +397,20 @@ app.get('/dashboard', (req, res) => {
               .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; margin: 20px 0; }
               .info { background: #d4edda; color: #155724; padding: 20px; border-radius: 10px; margin: 20px 0; }
               .debug { background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; margin: 20px 0; }
-              pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
           </style>
       </head>
       <body>
           <div class="container">
               <h1>❌ Dashboard não encontrado</h1>
-
               <div class="error">
                   <h3>Arquivo não encontrado:</h3>
-                  <p><strong>Caminho procurado:</strong> ${dashboardPath}</p>
-                  <p><strong>__dirname:</strong> ${__dirname}</p>
+                  <p><strong>Caminho:</strong> ${dashboardPath}</p>
               </div>
-
-              <div class="info">
-                  <h3>✅ Loja Conectada:</h3>
-                  <p><strong>Status:</strong> ${connectionStore.connected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}</p>
-                  <p><strong>Shop ID:</strong> ${connectionStore.shop_id || 'N/A'}</p>
-                  <p><strong>Loja:</strong> ${connectionStore.shop_info?.shop_name || 'N/A'}</p>
-              </div>
-
               <div class="debug">
                   <h3>🔧 Debug Info:</h3>
                   <p><a href="/debug/files" target="_blank">Ver Debug Completo</a></p>
-                  <p><a href="/api/my-shopee/status" target="_blank">Status da Conexão</a></p>
-                  <p><a href="/api/my-shopee/products" target="_blank">Ver Produtos</a></p>
+                  <p><a href="/api/test-partners" target="_blank">Testar Partners</a></p>
+                  <p><a href="/api/test-api-bases" target="_blank">Testar API Bases</a></p>
               </div>
           </div>
       </body>
@@ -393,7 +420,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ========================================
-// CALLBACK DA SHOPEE (IMPLEMENTAÇÃO COMPLETA)
+// CALLBACK DA SHOPEE
 // ========================================
 app.get('/auth/shopee/callback', async (req, res) => {
   const { code, shop_id, error } = req.query;
@@ -437,20 +464,9 @@ app.get('/auth/shopee/callback', async (req, res) => {
   try {
     console.log('🚀 Processando autorização...');
 
-    // 1. GERAR ACCESS TOKEN
     const tokenData = await generateAccessToken(code, shop_id);
-
-    // 2. BUSCAR INFO DA LOJA
     const shopInfo = await getShopInfo(tokenData.access_token, shop_id);
-
-    // 3. SALVAR CONEXÃO
     await saveConnection(shop_id, code, tokenData, shopInfo);
-
-    console.log('🎉 SUCESSO! SUA LOJA CONECTADA:', {
-      shop_id,
-      shop_name: shopInfo?.shop_name || 'N/A',
-      access_token: tokenData.access_token ? 'Gerado ✅' : 'Erro ❌',
-    });
 
     res.send(`
       <html>
@@ -465,17 +481,6 @@ app.get('/auth/shopee/callback', async (req, res) => {
               <p><strong>🔑 Access Token:</strong> Gerado com sucesso! ✅</p>
               <p><strong>🌐 Domínio:</strong> ${FIXED_DOMAIN}</p>
               <p><strong>✅ Status:</strong> CONECTADO E FUNCIONANDO!</p>
-            </div>
-            <h2>🚀 AGORA VOCÊ PODE:</h2>
-            <div style="text-align: left; max-width: 500px; margin: 20px auto; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
-              <ul style="list-style: none; padding: 0;">
-                <li>📦 Gerenciar seus milhares de produtos</li>
-                <li>💰 Atualizar preços em lote</li>
-                <li>📊 Controlar estoque</li>
-                <li>🎯 Gerenciar promoções</li>
-                <li>📈 Monitorar vendas</li>
-                <li>🔄 Sincronizar dados</li>
-              </ul>
             </div>
             <div style="margin-top: 30px;">
               <button onclick="window.close()" style="padding: 15px 30px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; font-size: 16px;">
@@ -507,10 +512,9 @@ app.get('/auth/shopee/callback', async (req, res) => {
 });
 
 // ========================================
-// ROTAS DA SUA LOJA SHOPEE (ATUALIZADAS)
+// ROTAS DA SUA LOJA SHOPEE
 // ========================================
 
-// Configuração e status
 app.get('/api/my-shopee/setup', (req, res) => {
   res.json({
     success: true,
@@ -533,7 +537,6 @@ app.get('/api/my-shopee/setup', (req, res) => {
   });
 });
 
-// Conectar SUA loja
 app.get('/api/my-shopee/connect', (req, res) => {
   try {
     const authUrl = generateAuthUrl();
@@ -565,7 +568,6 @@ app.get('/api/my-shopee/connect', (req, res) => {
   }
 });
 
-// Status da SUA loja (ATUALIZADO)
 app.get('/api/my-shopee/status', (req, res) => {
   if (connectionStore.connected) {
     res.json({
@@ -595,7 +597,6 @@ app.get('/api/my-shopee/status', (req, res) => {
   }
 });
 
-// SEUS produtos (ATUALIZADO)
 app.get('/api/my-shopee/products', async (req, res) => {
   if (!connectionStore.connected) {
     return res.json({
@@ -606,20 +607,10 @@ app.get('/api/my-shopee/products', async (req, res) => {
       total: 0,
       status: 'awaiting_connection',
       fixed_domain: FIXED_DOMAIN,
-      when_connected: {
-        available_actions: [
-          'Listar todos os seus produtos',
-          'Atualizar preços em lote',
-          'Gerenciar estoque',
-          'Controlar promoções',
-          'Monitorar vendas',
-        ],
-      },
     });
   }
 
   try {
-    // Buscar produtos reais da API Shopee
     const timestamp = Math.floor(Date.now() / 1000);
     const path = '/api/v2/product/get_item_list';
     const signature = generateSignature(
@@ -628,10 +619,6 @@ app.get('/api/my-shopee/products', async (req, res) => {
       connectionStore.access_token,
       connectionStore.shop_id
     );
-
-    console.log('📦 Buscando produtos da loja...', {
-      shop_id: connectionStore.shop_id,
-    });
 
     const response = await axios.get(`${SHOPEE_CONFIG.api_base}${path}`, {
       params: {
@@ -647,8 +634,6 @@ app.get('/api/my-shopee/products', async (req, res) => {
 
     const products = response.data.response?.item || [];
 
-    console.log('✅ Produtos encontrados:', products.length);
-
     res.json({
       success: true,
       connected: true,
@@ -661,10 +646,6 @@ app.get('/api/my-shopee/products', async (req, res) => {
       fixed_domain: FIXED_DOMAIN,
     });
   } catch (error) {
-    console.error(
-      '❌ Erro ao buscar produtos:',
-      error.response?.data || error.message
-    );
     res.json({
       success: false,
       connected: true,
@@ -676,55 +657,6 @@ app.get('/api/my-shopee/products', async (req, res) => {
   }
 });
 
-// Dashboard da SUA loja (ATUALIZADO)
-app.get('/api/my-shopee/dashboard', (req, res) => {
-  if (connectionStore.connected) {
-    res.json({
-      success: true,
-      connected: true,
-      message: 'Dashboard da SUA loja Shopee',
-      fixed_domain: FIXED_DOMAIN,
-      shop_info: {
-        shop_id: connectionStore.shop_id,
-        shop_name: connectionStore.shop_info?.shop_name || 'N/A',
-        connected_at: connectionStore.connected_at,
-        access_token_status: 'active',
-      },
-      your_store_data: {
-        total_products: 'Use /api/my-shopee/products para ver',
-        total_orders: 'Implementar endpoint de pedidos',
-        total_revenue: 'Implementar endpoint de vendas',
-        pending_orders: 'Implementar endpoint de pedidos',
-        low_stock_products: 'Implementar verificação de estoque',
-        active_promotions: 'Implementar endpoint de promoções',
-      },
-      status: 'connected_and_ready',
-      available_endpoints: [
-        '/api/my-shopee/products - Ver produtos reais',
-        '/api/my-shopee/status - Status da conexão',
-        '/api/my-shopee/connect - Reconectar se necessário',
-      ],
-    });
-  } else {
-    res.json({
-      success: true,
-      connected: false,
-      message: 'Dashboard da SUA loja Shopee',
-      fixed_domain: FIXED_DOMAIN,
-      your_store_data: {
-        total_products: 'Conecte sua loja',
-        total_orders: 'Conecte sua loja',
-        total_revenue: 'Conecte sua loja',
-        pending_orders: 'Conecte sua loja',
-        low_stock_products: 'Conecte sua loja',
-        active_promotions: 'Conecte sua loja',
-      },
-      status: 'awaiting_connection',
-      note: 'Conecte sua loja para ver os dados reais dos seus milhares de produtos',
-    });
-  }
-});
-
 // ========================================
 // APIs ORIGINAIS
 // ========================================
@@ -732,7 +664,7 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'API V2 DEBUG',
+    version: 'API V3 DEBUG',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager - SUA Loja Real com domínio fixo!',
     fixed_domain: FIXED_DOMAIN,
@@ -749,34 +681,6 @@ app.get('/api/products', (req, res) => {
   res.redirect('/api/my-shopee/products');
 });
 
-app.get('/api/benchmarking', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Benchmarking dos SEUS produtos',
-    note: connectionStore.connected
-      ? 'Loja conectada! Implemente análise de produtos'
-      : 'Conecte sua loja para análise dos seus produtos',
-    connected: connectionStore.connected,
-    shop_id: connectionStore.shop_id,
-    fixed_domain: FIXED_DOMAIN,
-  });
-});
-
-app.get('/api/reports', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Relatórios da SUA loja',
-    connected: connectionStore.connected,
-    shop_id: connectionStore.shop_id,
-    available_reports: [
-      'vendas_sua_loja',
-      'estoque_seus_produtos',
-      'performance_produtos',
-    ],
-    fixed_domain: FIXED_DOMAIN,
-  });
-});
-
 // ========================================
 // 404 HANDLER
 // ========================================
@@ -790,11 +694,12 @@ app.use((req, res) => {
     available_routes: [
       '/debug/files - Debug de arquivos',
       '/api/test-shopee - Teste endpoints Shopee',
+      '/api/test-api-bases - Teste API bases',
+      '/api/test-partners - Teste partners',
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
       '/api/my-shopee/status',
       '/api/my-shopee/products',
-      '/api/my-shopee/dashboard',
       '/api/health',
       '/auth/shopee/callback',
     ],
