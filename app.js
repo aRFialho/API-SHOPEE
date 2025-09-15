@@ -1,12 +1,26 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const axios = require('axios');
 const app = express();
 
 app.use(express.json());
 
 // ========================================
-// CONFIGURA��O COM DOM�NIO FIXO
+// STORAGE SIMPLES (EM MEMÓRIA)
+// ========================================
+let connectionStore = {
+  connected: false,
+  shop_id: null,
+  auth_code: null,
+  access_token: null,
+  refresh_token: null,
+  connected_at: null,
+  shop_info: null,
+};
+
+// ========================================
+// CONFIGURAÇÃO COM DOMÍNIO FIXO
 // ========================================
 const FIXED_DOMAIN = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -15,16 +29,20 @@ const FIXED_DOMAIN = process.env.VERCEL_URL
 const SHOPEE_CONFIG = {
   partner_id: '2012740',
   partner_key:
-    'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43', // ✅ NOVA KEY
+    'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43',
   redirect_url: `${FIXED_DOMAIN}/auth/shopee/callback`,
   base_domain: FIXED_DOMAIN,
-  environment: 'production', // ✅ MUDAR PARA PRODUCTION
-  api_base: 'https://partner.shopeemobile.com', // ✅ REMOVER 'test-stable'
+  environment: 'production',
+  api_base: 'https://partner.shopeemobile.com',
 };
 
-console.log('? Dom�nio fixo configurado:', FIXED_DOMAIN);
+console.log('🌐 Domínio fixo configurado:', FIXED_DOMAIN);
 
-// Fun��o para gerar assinatura
+// ========================================
+// FUNÇÕES AUXILIARES
+// ========================================
+
+// Função para gerar assinatura
 const generateSignature = (path, timestamp, accessToken = '', shopId = '') => {
   const partnerId = SHOPEE_CONFIG.partner_id;
   const partnerKey = SHOPEE_CONFIG.partner_key;
@@ -37,7 +55,7 @@ const generateSignature = (path, timestamp, accessToken = '', shopId = '') => {
     .digest('hex');
 };
 
-// Fun��o para gerar URL de autoriza��o
+// Função para gerar URL de autorização
 const generateAuthUrl = () => {
   const timestamp = Math.floor(Date.now() / 1000);
   const path = '/api/v2/shop/auth_partner';
@@ -45,8 +63,98 @@ const generateAuthUrl = () => {
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
 
+// Função para gerar access token
+const generateAccessToken = async (code, shopId) => {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/auth/token';
+    const signature = generateSignature(path, timestamp);
+
+    console.log('🔑 Gerando access token...', {
+      code: code.substring(0, 10) + '...',
+      shopId,
+    });
+
+    const response = await axios.post(
+      `${SHOPEE_CONFIG.api_base}${path}`,
+      {
+        code: code,
+        shop_id: parseInt(shopId),
+        partner_id: parseInt(SHOPEE_CONFIG.partner_id),
+      },
+      {
+        params: {
+          partner_id: SHOPEE_CONFIG.partner_id,
+          timestamp: timestamp,
+          sign: signature,
+        },
+      }
+    );
+
+    console.log('✅ Access token gerado com sucesso!');
+    return response.data;
+  } catch (error) {
+    console.error(
+      '❌ Erro ao gerar access token:',
+      error.response?.data || error.message
+    );
+    throw new Error(
+      `Erro ao gerar access token: ${error.response?.data?.message || error.message}`
+    );
+  }
+};
+
+// Função para buscar informações da loja
+const getShopInfo = async (accessToken, shopId) => {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/shop/get_shop_info';
+    const signature = generateSignature(path, timestamp, accessToken, shopId);
+
+    console.log('🏪 Buscando informações da loja...', { shopId });
+
+    const response = await axios.get(`${SHOPEE_CONFIG.api_base}${path}`, {
+      params: {
+        partner_id: SHOPEE_CONFIG.partner_id,
+        timestamp: timestamp,
+        access_token: accessToken,
+        shop_id: shopId,
+        sign: signature,
+      },
+    });
+
+    console.log('✅ Informações da loja obtidas!');
+    return response.data;
+  } catch (error) {
+    console.error(
+      '❌ Erro ao buscar info da loja:',
+      error.response?.data || error.message
+    );
+    return { shop_name: `Loja ${shopId}`, status: 'connected' };
+  }
+};
+
+// Função para salvar conexão
+const saveConnection = async (shopId, authCode, tokenData, shopInfo) => {
+  connectionStore = {
+    connected: true,
+    shop_id: shopId,
+    auth_code: authCode,
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    connected_at: new Date().toISOString(),
+    shop_info: shopInfo,
+  };
+
+  console.log('💾 Conexão salva:', {
+    shop_id: shopId,
+    shop_name: shopInfo?.shop_name || 'N/A',
+    connected: true,
+  });
+};
+
 // ========================================
-// ARQUIVOS EST�TICOS
+// ARQUIVOS ESTÁTICOS
 // ========================================
 app.use('/css', express.static(path.join(__dirname, 'src', 'public', 'css')));
 app.use('/js', express.static(path.join(__dirname, 'src', 'public', 'js')));
@@ -66,12 +174,12 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ========================================
-// CALLBACK DA SHOPEE
+// CALLBACK DA SHOPEE (IMPLEMENTAÇÃO COMPLETA)
 // ========================================
-app.get('/auth/shopee/callback', (req, res) => {
+app.get('/auth/shopee/callback', async (req, res) => {
   const { code, shop_id, error } = req.query;
 
-  console.log('?? Callback recebido:', {
+  console.log('🔄 Callback recebido:', {
     code: code?.substring(0, 10) + '...',
     shop_id,
     error,
@@ -81,45 +189,73 @@ app.get('/auth/shopee/callback', (req, res) => {
   if (error) {
     return res.send(`
       <html>
-        <head><title>Erro na Autoriza��o</title></head>
+        <head><title>Erro na Autorização</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff6b6b; color: white;">
-          <h1>? Erro na Autoriza��o</h1>
+          <h1>❌ Erro na Autorização</h1>
           <p><strong>Erro:</strong> ${error}</p>
-          <p><strong>Dom�nio:</strong> ${FIXED_DOMAIN}</p>
+          <p><strong>Domínio:</strong> ${FIXED_DOMAIN}</p>
           <button onclick="window.close()" style="padding: 10px 20px; background: white; color: #ff6b6b; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
         </body>
       </html>
     `);
   }
 
-  if (code && shop_id) {
-    console.log('?? SUCESSO! SUA LOJA CONECTADA:', {
+  if (!code || !shop_id) {
+    return res.status(400).send(`
+      <html>
+        <head><title>Parâmetros Inválidos</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+          <h1>❌ Parâmetros Inválidos</h1>
+          <p>Code: ${code || 'Não recebido'}</p>
+          <p>Shop ID: ${shop_id || 'Não recebido'}</p>
+          <p>Domínio: ${FIXED_DOMAIN}</p>
+          <button onclick="window.close()">Fechar</button>
+        </body>
+      </html>
+    `);
+  }
+
+  try {
+    console.log('🚀 Processando autorização...');
+
+    // 1. GERAR ACCESS TOKEN
+    const tokenData = await generateAccessToken(code, shop_id);
+
+    // 2. BUSCAR INFO DA LOJA
+    const shopInfo = await getShopInfo(tokenData.access_token, shop_id);
+
+    // 3. SALVAR CONEXÃO
+    await saveConnection(shop_id, code, tokenData, shopInfo);
+
+    console.log('🎉 SUCESSO! SUA LOJA CONECTADA:', {
       shop_id,
-      code: code.substring(0, 20) + '...',
+      shop_name: shopInfo?.shop_name || 'N/A',
+      access_token: tokenData.access_token ? 'Gerado ✅' : 'Erro ❌',
     });
 
     res.send(`
       <html>
-        <head><title>?? SUA Loja Conectada!</title></head>
+        <head><title>🎉 SUA Loja Conectada!</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
           <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 700px; margin: 0 auto;">
-            <div style="font-size: 6em; margin-bottom: 20px;">??</div>
+            <div style="font-size: 6em; margin-bottom: 20px;">🎉</div>
             <h1>SUA LOJA SHOPEE CONECTADA!</h1>
             <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 10px; margin: 25px 0;">
-              <p><strong>? Shop ID:</strong> ${shop_id}</p>
-              <p><strong>? Authorization Code:</strong> ${code.substring(0, 30)}...</p>
-              <p><strong>? Dom�nio Fixo:</strong> ${FIXED_DOMAIN}</p>
-              <p><strong>? Status:</strong> CONECTADO COM SUCESSO!</p>
+              <p><strong>🏪 Shop ID:</strong> ${shop_id}</p>
+              <p><strong>🏬 Loja:</strong> ${shopInfo?.shop_name || 'Carregando...'}</p>
+              <p><strong>🔑 Access Token:</strong> Gerado com sucesso! ✅</p>
+              <p><strong>🌐 Domínio:</strong> ${FIXED_DOMAIN}</p>
+              <p><strong>✅ Status:</strong> CONECTADO E FUNCIONANDO!</p>
             </div>
-            <h2>?? AGORA VOC� PODE:</h2>
+            <h2>🚀 AGORA VOCÊ PODE:</h2>
             <div style="text-align: left; max-width: 500px; margin: 20px auto; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
               <ul style="list-style: none; padding: 0;">
-                <li>??? Gerenciar seus milhares de produtos</li>
-                <li>?? Atualizar pre�os em lote</li>
-                <li>?? Controlar estoque</li>
-                <li>?? Gerenciar promo��es</li>
-                <li>?? Monitorar vendas</li>
-                <li>?? Sincronizar dados</li>
+                <li>📦 Gerenciar seus milhares de produtos</li>
+                <li>💰 Atualizar preços em lote</li>
+                <li>📊 Controlar estoque</li>
+                <li>🎯 Gerenciar promoções</li>
+                <li>📈 Monitorar vendas</li>
+                <li>🔄 Sincronizar dados</li>
               </ul>
             </div>
             <div style="margin-top: 30px;">
@@ -134,16 +270,17 @@ app.get('/auth/shopee/callback', (req, res) => {
         </body>
       </html>
     `);
-  } else {
-    res.status(400).send(`
+  } catch (error) {
+    console.error('❌ Erro no callback:', error);
+    res.status(500).send(`
       <html>
-        <head><title>Par�metros Inv�lidos</title></head>
-        <body style="font-family: Arial; text-align: center; padding: 50px;">
-          <h1>?? Par�metros Inv�lidos</h1>
-          <p>Code: ${code || 'N�o recebido'}</p>
-          <p>Shop ID: ${shop_id || 'N�o recebido'}</p>
-          <p>Dom�nio: ${FIXED_DOMAIN}</p>
-          <button onclick="window.close()">Fechar</button>
+        <head><title>Erro no Processamento</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff6b6b; color: white;">
+          <h1>❌ Erro no Processamento</h1>
+          <p><strong>Shop ID:</strong> ${shop_id}</p>
+          <p><strong>Erro:</strong> ${error.message}</p>
+          <p><strong>Domínio:</strong> ${FIXED_DOMAIN}</p>
+          <button onclick="window.close()" style="padding: 10px 20px; background: white; color: #ff6b6b; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
         </body>
       </html>
     `);
@@ -151,10 +288,10 @@ app.get('/auth/shopee/callback', (req, res) => {
 });
 
 // ========================================
-// ROTAS DA SUA LOJA SHOPEE
+// ROTAS DA SUA LOJA SHOPEE (ATUALIZADAS)
 // ========================================
 
-// Configura��o e status
+// Configuração e status
 app.get('/api/my-shopee/setup', (req, res) => {
   res.json({
     success: true,
@@ -162,7 +299,7 @@ app.get('/api/my-shopee/setup', (req, res) => {
     domain_fixed: true,
     partner_id_set: true,
     partner_key_set: true,
-    message: 'SUA loja configurada com dom�nio fixo!',
+    message: 'SUA loja configurada com domínio fixo!',
     config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
@@ -187,11 +324,11 @@ app.get('/api/my-shopee/connect', (req, res) => {
       auth_url: authUrl,
       message: 'Clique no auth_url para conectar SUA loja Shopee',
       instructions: [
-        '1. Configure o dom�nio na Shopee Open Platform primeiro',
+        '1. Configure o domínio na Shopee Open Platform primeiro',
         '2. Clique no auth_url abaixo',
-        '3. Fa�a login na SUA conta Shopee (a que tem milhares de produtos)',
+        '3. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
         '4. Autorize o acesso aos seus produtos',
-        '5. Aguarde o redirecionamento autom�tico',
+        '5. Aguarde o redirecionamento automático',
       ],
       domain_info: {
         fixed_domain: FIXED_DOMAIN,
@@ -203,68 +340,170 @@ app.get('/api/my-shopee/connect', (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Erro ao gerar URL de conex�o',
+      message: 'Erro ao gerar URL de conexão',
       error: error.message,
     });
   }
 });
 
-// Status da SUA loja
+// Status da SUA loja (ATUALIZADO)
 app.get('/api/my-shopee/status', (req, res) => {
-  res.json({
-    success: true,
-    connected: false,
-    message: 'Configure o dom�nio na Shopee e conecte sua loja',
-    domain_status: 'fixed_domain_ready',
-    fixed_domain: FIXED_DOMAIN,
-    configure_in_shopee: FIXED_DOMAIN,
-    next_steps: [
-      '1. Configure o dom�nio na Shopee Open Platform',
-      '2. Use /api/my-shopee/connect para gerar auth_url',
-      '3. Clique na auth_url para conectar sua loja',
-    ],
-  });
-});
-
-// SEUS produtos
-app.get('/api/my-shopee/products', (req, res) => {
-  res.json({
-    success: true,
-    message:
-      'Conecte sua loja primeiro para ver seus milhares de produtos reais',
-    products: [],
-    total: 0,
-    status: 'awaiting_connection',
-    fixed_domain: FIXED_DOMAIN,
-    when_connected: {
-      available_actions: [
-        'Listar todos os seus produtos',
-        'Atualizar pre�os em lote',
-        'Gerenciar estoque',
-        'Controlar promo��es',
-        'Monitorar vendas',
+  if (connectionStore.connected) {
+    res.json({
+      success: true,
+      connected: true,
+      shop_id: connectionStore.shop_id,
+      shop_name: connectionStore.shop_info?.shop_name || 'N/A',
+      connected_at: connectionStore.connected_at,
+      access_token_status: connectionStore.access_token ? 'active' : 'missing',
+      message: 'Loja conectada com sucesso!',
+      fixed_domain: FIXED_DOMAIN,
+    });
+  } else {
+    res.json({
+      success: true,
+      connected: false,
+      message: 'Configure o domínio na Shopee e conecte sua loja',
+      domain_status: 'fixed_domain_ready',
+      fixed_domain: FIXED_DOMAIN,
+      configure_in_shopee: FIXED_DOMAIN,
+      next_steps: [
+        '1. Configure o domínio na Shopee Open Platform',
+        '2. Use /api/my-shopee/connect para gerar auth_url',
+        '3. Clique na auth_url para conectar sua loja',
       ],
-    },
-  });
+    });
+  }
 });
 
-// Dashboard da SUA loja
+// SEUS produtos (ATUALIZADO)
+app.get('/api/my-shopee/products', async (req, res) => {
+  if (!connectionStore.connected) {
+    return res.json({
+      success: true,
+      message:
+        'Conecte sua loja primeiro para ver seus milhares de produtos reais',
+      products: [],
+      total: 0,
+      status: 'awaiting_connection',
+      fixed_domain: FIXED_DOMAIN,
+      when_connected: {
+        available_actions: [
+          'Listar todos os seus produtos',
+          'Atualizar preços em lote',
+          'Gerenciar estoque',
+          'Controlar promoções',
+          'Monitorar vendas',
+        ],
+      },
+    });
+  }
+
+  try {
+    // Buscar produtos reais da API Shopee
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = '/api/v2/product/get_item_list';
+    const signature = generateSignature(
+      path,
+      timestamp,
+      connectionStore.access_token,
+      connectionStore.shop_id
+    );
+
+    console.log('📦 Buscando produtos da loja...', {
+      shop_id: connectionStore.shop_id,
+    });
+
+    const response = await axios.get(`${SHOPEE_CONFIG.api_base}${path}`, {
+      params: {
+        partner_id: SHOPEE_CONFIG.partner_id,
+        timestamp: timestamp,
+        access_token: connectionStore.access_token,
+        shop_id: connectionStore.shop_id,
+        sign: signature,
+        page_size: 50,
+        offset: 0,
+      },
+    });
+
+    const products = response.data.response?.item || [];
+
+    console.log('✅ Produtos encontrados:', products.length);
+
+    res.json({
+      success: true,
+      connected: true,
+      shop_id: connectionStore.shop_id,
+      shop_name: connectionStore.shop_info?.shop_name || 'N/A',
+      products: products,
+      total: products.length,
+      status: 'connected',
+      message: `${products.length} produtos encontrados na sua loja!`,
+      fixed_domain: FIXED_DOMAIN,
+    });
+  } catch (error) {
+    console.error(
+      '❌ Erro ao buscar produtos:',
+      error.response?.data || error.message
+    );
+    res.json({
+      success: false,
+      connected: true,
+      shop_id: connectionStore.shop_id,
+      error: 'Erro ao buscar produtos',
+      message: error.response?.data?.message || error.message,
+      fixed_domain: FIXED_DOMAIN,
+    });
+  }
+});
+
+// Dashboard da SUA loja (ATUALIZADO)
 app.get('/api/my-shopee/dashboard', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Dashboard da SUA loja Shopee',
-    fixed_domain: FIXED_DOMAIN,
-    your_store_data: {
-      total_products: 'Conecte sua loja',
-      total_orders: 'Conecte sua loja',
-      total_revenue: 'Conecte sua loja',
-      pending_orders: 'Conecte sua loja',
-      low_stock_products: 'Conecte sua loja',
-      active_promotions: 'Conecte sua loja',
-    },
-    status: 'awaiting_connection',
-    note: 'Conecte sua loja para ver os dados reais dos seus milhares de produtos',
-  });
+  if (connectionStore.connected) {
+    res.json({
+      success: true,
+      connected: true,
+      message: 'Dashboard da SUA loja Shopee',
+      fixed_domain: FIXED_DOMAIN,
+      shop_info: {
+        shop_id: connectionStore.shop_id,
+        shop_name: connectionStore.shop_info?.shop_name || 'N/A',
+        connected_at: connectionStore.connected_at,
+        access_token_status: 'active',
+      },
+      your_store_data: {
+        total_products: 'Use /api/my-shopee/products para ver',
+        total_orders: 'Implementar endpoint de pedidos',
+        total_revenue: 'Implementar endpoint de vendas',
+        pending_orders: 'Implementar endpoint de pedidos',
+        low_stock_products: 'Implementar verificação de estoque',
+        active_promotions: 'Implementar endpoint de promoções',
+      },
+      status: 'connected_and_ready',
+      available_endpoints: [
+        '/api/my-shopee/products - Ver produtos reais',
+        '/api/my-shopee/status - Status da conexão',
+        '/api/my-shopee/connect - Reconectar se necessário',
+      ],
+    });
+  } else {
+    res.json({
+      success: true,
+      connected: false,
+      message: 'Dashboard da SUA loja Shopee',
+      fixed_domain: FIXED_DOMAIN,
+      your_store_data: {
+        total_products: 'Conecte sua loja',
+        total_orders: 'Conecte sua loja',
+        total_revenue: 'Conecte sua loja',
+        pending_orders: 'Conecte sua loja',
+        low_stock_products: 'Conecte sua loja',
+        active_promotions: 'Conecte sua loja',
+      },
+      status: 'awaiting_connection',
+      note: 'Conecte sua loja para ver os dados reais dos seus milhares de produtos',
+    });
+  }
 });
 
 // ========================================
@@ -274,10 +513,11 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'FIXED_DOMAIN_V1',
+    version: 'API V2',
     timestamp: new Date().toISOString(),
-    message: 'Shopee Manager - SUA Loja Real com dom�nio fixo!',
+    message: 'Shopee Manager - SUA Loja Real com domínio fixo!',
     fixed_domain: FIXED_DOMAIN,
+    connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     shopee_config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
@@ -294,7 +534,11 @@ app.get('/api/benchmarking', (req, res) => {
   res.json({
     success: true,
     message: 'Benchmarking dos SEUS produtos',
-    note: 'Conecte sua loja para an�lise dos seus produtos',
+    note: connectionStore.connected
+      ? 'Loja conectada! Implemente análise de produtos'
+      : 'Conecte sua loja para análise dos seus produtos',
+    connected: connectionStore.connected,
+    shop_id: connectionStore.shop_id,
     fixed_domain: FIXED_DOMAIN,
   });
 });
@@ -302,7 +546,9 @@ app.get('/api/benchmarking', (req, res) => {
 app.get('/api/reports', (req, res) => {
   res.json({
     success: true,
-    message: 'Relat�rios da SUA loja',
+    message: 'Relatórios da SUA loja',
+    connected: connectionStore.connected,
+    shop_id: connectionStore.shop_id,
     available_reports: [
       'vendas_sua_loja',
       'estoque_seus_produtos',
@@ -317,10 +563,11 @@ app.get('/api/reports', (req, res) => {
 // ========================================
 app.use((req, res) => {
   res.status(404).json({
-    error: '404 - N�o encontrado',
+    error: '404 - Não encontrado',
     path: req.path,
     method: req.method,
     fixed_domain: FIXED_DOMAIN,
+    connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     available_routes: [
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
@@ -340,8 +587,8 @@ const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`?? Servidor rodando em http://localhost:${PORT}`);
-    console.log(`?? Dom�nio fixo: ${FIXED_DOMAIN}`);
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`🌐 Domínio fixo: ${FIXED_DOMAIN}`);
   });
 }
 
