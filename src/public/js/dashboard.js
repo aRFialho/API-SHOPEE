@@ -4,7 +4,7 @@
 
 // Definir API_BASE
 const API_BASE =
-  'https://shopee-manager-9pdwpmws9-raphaels-projects-11cd9f6b.vercel.app';
+  'https://shopee-manager-604z8x8wp-raphaels-projects-11cd9f6b.vercel.app';
 console.log('ðŸ”— API_BASE definida como:', API_BASE);
 
 // VariÃ¡veis globais
