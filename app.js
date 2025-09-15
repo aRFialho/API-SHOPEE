@@ -154,6 +154,65 @@ const saveConnection = async (shopId, authCode, tokenData, shopInfo) => {
 };
 
 // ========================================
+// DEBUG ENDPOINT (ADICIONAR PRIMEIRO)
+// ========================================
+app.get('/debug/files', (req, res) => {
+  const fs = require('fs');
+
+  const checkPaths = [
+    path.join(__dirname, 'src', 'public', 'css', 'dashboard.css'),
+    path.join(__dirname, 'src', 'views', 'dashboard.html'),
+    path.join(__dirname, 'src'),
+    path.join(__dirname, 'src', 'public'),
+    path.join(__dirname, 'src', 'views'),
+    __dirname,
+  ];
+
+  const results = checkPaths.map(filePath => ({
+    path: filePath,
+    exists: fs.existsSync(filePath),
+    isFile: fs.existsSync(filePath) ? fs.statSync(filePath).isFile() : false,
+    isDirectory: fs.existsSync(filePath)
+      ? fs.statSync(filePath).isDirectory()
+      : false,
+  }));
+
+  let directoryContents = {};
+  try {
+    directoryContents.root = fs.readdirSync(__dirname);
+    if (fs.existsSync(path.join(__dirname, 'src'))) {
+      directoryContents.src = fs.readdirSync(path.join(__dirname, 'src'));
+    }
+    if (fs.existsSync(path.join(__dirname, 'src', 'public'))) {
+      directoryContents.srcPublic = fs.readdirSync(
+        path.join(__dirname, 'src', 'public')
+      );
+    }
+    if (fs.existsSync(path.join(__dirname, 'src', 'views'))) {
+      directoryContents.srcViews = fs.readdirSync(
+        path.join(__dirname, 'src', 'views')
+      );
+    }
+  } catch (error) {
+    directoryContents.error = error.message;
+  }
+
+  res.json({
+    __dirname,
+    environment: process.env.NODE_ENV || 'development',
+    vercel_url: process.env.VERCEL_URL || 'not_set',
+    fixed_domain: FIXED_DOMAIN,
+    files_check: results,
+    directory_contents: directoryContents,
+    static_routes_configured: {
+      css: '/css -> ' + path.join(__dirname, 'src', 'public', 'css'),
+      js: '/js -> ' + path.join(__dirname, 'src', 'public', 'js'),
+      images: '/images -> ' + path.join(__dirname, 'src', 'public', 'images'),
+    },
+  });
+});
+
+// ========================================
 // ARQUIVOS ESTÁTICOS
 // ========================================
 app.use('/css', express.static(path.join(__dirname, 'src', 'public', 'css')));
@@ -169,8 +228,60 @@ app.use(
 app.get('/', (req, res) => res.redirect('/dashboard'));
 
 app.get('/dashboard', (req, res) => {
+  const fs = require('fs');
   const dashboardPath = path.join(__dirname, 'src', 'views', 'dashboard.html');
-  res.sendFile(dashboardPath);
+
+  console.log('📁 Dashboard path:', dashboardPath);
+  console.log('📁 __dirname:', __dirname);
+
+  // Verificar se arquivo existe
+  if (fs.existsSync(dashboardPath)) {
+    console.log('✅ dashboard.html encontrado!');
+    res.sendFile(dashboardPath);
+  } else {
+    console.log('❌ dashboard.html NÃO encontrado!');
+    res.status(404).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Dashboard - Arquivo não encontrado</title>
+          <style>
+              body { font-family: Arial; margin: 0; padding: 20px; background: #f8f9fa; }
+              .container { max-width: 800px; margin: 0 auto; }
+              .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; margin: 20px 0; }
+              .info { background: #d4edda; color: #155724; padding: 20px; border-radius: 10px; margin: 20px 0; }
+              .debug { background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; margin: 20px 0; }
+              pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <h1>❌ Dashboard não encontrado</h1>
+
+              <div class="error">
+                  <h3>Arquivo não encontrado:</h3>
+                  <p><strong>Caminho procurado:</strong> ${dashboardPath}</p>
+                  <p><strong>__dirname:</strong> ${__dirname}</p>
+              </div>
+
+              <div class="info">
+                  <h3>✅ Loja Conectada:</h3>
+                  <p><strong>Status:</strong> ${connectionStore.connected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}</p>
+                  <p><strong>Shop ID:</strong> ${connectionStore.shop_id || 'N/A'}</p>
+                  <p><strong>Loja:</strong> ${connectionStore.shop_info?.shop_name || 'N/A'}</p>
+              </div>
+
+              <div class="debug">
+                  <h3>🔧 Debug Info:</h3>
+                  <p><a href="/debug/files" >Ver Debug Completo</a></p>
+                  <p><a href="/api/my-shopee/status" >Status da Conexão</a></p>
+                  <p><a href="/api/my-shopee/products" >Ver Produtos</a></p>
+              </div>
+          </div>
+      </body>
+      </html>
+    `);
+  }
 });
 
 // ========================================
@@ -179,7 +290,7 @@ app.get('/dashboard', (req, res) => {
 app.get('/auth/shopee/callback', async (req, res) => {
   const { code, shop_id, error } = req.query;
 
-  console.log('🔄 Callback recebido:', {
+  console.log('�� Callback recebido:', {
     code: code?.substring(0, 10) + '...',
     shop_id,
     error,
@@ -238,7 +349,7 @@ app.get('/auth/shopee/callback', async (req, res) => {
         <head><title>🎉 SUA Loja Conectada!</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
           <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 700px; margin: 0 auto;">
-            <div style="font-size: 6em; margin-bottom: 20px;">🎉</div>
+            <div style="font-size: 6em; margin-bottom: 20px;">��</div>
             <h1>SUA LOJA SHOPEE CONECTADA!</h1>
             <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 10px; margin: 25px 0;">
               <p><strong>🏪 Shop ID:</strong> ${shop_id}</p>
@@ -513,7 +624,7 @@ app.get('/api/my-shopee/dashboard', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'API V2',
+    version: 'API V2 DEBUG',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager - SUA Loja Real com domínio fixo!',
     fixed_domain: FIXED_DOMAIN,
@@ -569,6 +680,7 @@ app.use((req, res) => {
     fixed_domain: FIXED_DOMAIN,
     connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     available_routes: [
+      '/debug/files - Debug de arquivos',
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
       '/api/my-shopee/status',
