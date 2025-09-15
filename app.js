@@ -20,26 +20,26 @@ let connectionStore = {
 };
 
 // ========================================
-// CONFIGURAÇÃO COM DOMÍNIO PERSONALIZADO
+// CONFIGURAÇÃO COM VARIÁVEIS DE AMBIENTE
 // ========================================
-// ========================================
-// CONFIGURAÇÃO COM DOMÍNIO PERSONALIZADO FORÇADO
-// ========================================
-const FIXED_DOMAIN = 'https://shopee-manager.vercel.app'; // FORÇADO
+require('dotenv').config();
+
+const FIXED_DOMAIN = process.env.API_BASE_URL || 'https://shopee-manager-604z8x8wp-raphaels-projects-11cd9f6b.vercel.app';
 
 const SHOPEE_CONFIG = {
-  partner_id: '2012740',
-  partner_key:
-    'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43',
-  redirect_url: `${FIXED_DOMAIN}/auth/shopee/callback`,
+  partner_id: process.env.SHOPEE_PARTNER_ID || '2012740',
+  partner_key: process.env.SHOPEE_PARTNER_KEY || 'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43',
+  redirect_url: process.env.SHOPEE_REDIRECT_URI || `${FIXED_DOMAIN}/auth/shopee/callback`,
   base_domain: FIXED_DOMAIN,
-  environment: 'production',
-  api_base: 'https://partner.shopeemobile.com',
+  environment: process.env.NODE_ENV || 'production',
+  api_base: process.env.SHOPEE_API_BASE || 'https://partner.shopeemobile.com',
 };
 
-console.log('🌐 Domínio personalizado FORÇADO:', FIXED_DOMAIN);
-console.log('�� VERCEL_URL env:', process.env.VERCEL_URL || 'not_set');
-console.log('🔗 Callback URL configurado:', SHOPEE_CONFIG.redirect_url);
+console.log('🔑 Credenciais carregadas:');
+console.log('📍 Partner ID:', SHOPEE_CONFIG.partner_id);
+console.log('🔐 Partner Key:', SHOPEE_CONFIG.partner_key.substring(0, 10) + '...');
+console.log('🌐 Domínio:', FIXED_DOMAIN);
+console.log('🔗 Callback:', SHOPEE_CONFIG.redirect_url);
 
 // ========================================
 // FUNÇÕES AUXILIARES
