@@ -22,7 +22,10 @@ let connectionStore = {
 // ========================================
 // CONFIGURAÇÃO COM DOMÍNIO PERSONALIZADO
 // ========================================
-const FIXED_DOMAIN = 'https://shopee-manager.vercel.app';
+// ========================================
+// CONFIGURAÇÃO COM DOMÍNIO PERSONALIZADO FORÇADO
+// ========================================
+const FIXED_DOMAIN = 'https://shopee-manager.vercel.app'; // FORÇADO
 
 const SHOPEE_CONFIG = {
   partner_id: '2012740',
@@ -34,7 +37,9 @@ const SHOPEE_CONFIG = {
   api_base: 'https://partner.shopeemobile.com',
 };
 
-console.log('🌐 Domínio personalizado configurado:', FIXED_DOMAIN);
+console.log('🌐 Domínio personalizado FORÇADO:', FIXED_DOMAIN);
+console.log('�� VERCEL_URL env:', process.env.VERCEL_URL || 'not_set');
+console.log('🔗 Callback URL configurado:', SHOPEE_CONFIG.redirect_url);
 
 // ========================================
 // FUNÇÕES AUXILIARES
@@ -712,16 +717,18 @@ app.get('/api/my-shopee/products', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'API V5 DOMÍNIO PERSONALIZADO',
+    version: 'API V6 DOMÍNIO FORÇADO',
     timestamp: new Date().toISOString(),
     message: 'Shopee Manager - SUA Loja Real com domínio personalizado!',
     fixed_domain: FIXED_DOMAIN,
+    vercel_url_env: process.env.VERCEL_URL || 'not_set',
     connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     shopee_config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
       domain_fixed: true,
       custom_domain: 'shopee-manager.vercel.app',
+      callback_url: SHOPEE_CONFIG.redirect_url,
     },
     available_tests: [
       '/api/test-auth-real - Teste auth endpoints',
