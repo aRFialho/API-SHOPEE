@@ -63,43 +63,52 @@ const generateAuthUrl = () => {
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
 
-// Função para gerar access token
+// Função para gerar access token (COM DEBUG)
 const generateAccessToken = async (code, shopId) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
     const path = '/api/v2/auth/token';
     const signature = generateSignature(path, timestamp);
 
-    console.log('🔑 Gerando access token...', {
-      code: code.substring(0, 10) + '...',
-      shopId,
+    const requestData = {
+      code: code,
+      shop_id: parseInt(shopId),
+      partner_id: parseInt(SHOPEE_CONFIG.partner_id),
+    };
+
+    const requestParams = {
+      partner_id: SHOPEE_CONFIG.partner_id,
+      timestamp: timestamp,
+      sign: signature,
+    };
+
+    const fullUrl = `${SHOPEE_CONFIG.api_base}${path}`;
+
+    console.log('🔑 GERANDO ACCESS TOKEN - DEBUG COMPLETO:');
+    console.log('📍 URL:', fullUrl);
+    console.log('📦 Body:', requestData);
+    console.log('🔗 Params:', requestParams);
+    console.log('🔐 Signature:', signature);
+    console.log('⏰ Timestamp:', timestamp);
+
+    const response = await axios.post(fullUrl, requestData, {
+      params: requestParams,
+      timeout: 30000,
     });
 
-    const response = await axios.post(
-      `${SHOPEE_CONFIG.api_base}${path}`,
-      {
-        code: code,
-        shop_id: parseInt(shopId),
-        partner_id: parseInt(SHOPEE_CONFIG.partner_id),
-      },
-      {
-        params: {
-          partner_id: SHOPEE_CONFIG.partner_id,
-          timestamp: timestamp,
-          sign: signature,
-        },
-      }
-    );
-
     console.log('✅ Access token gerado com sucesso!');
+    console.log('📋 Response:', response.data);
     return response.data;
   } catch (error) {
-    console.error(
-      '❌ Erro ao gerar access token:',
-      error.response?.data || error.message
-    );
+    console.error('❌ ERRO DETALHADO:');
+    console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}/api/v2/auth/token`);
+    console.error('📊 Status:', error.response?.status);
+    console.error('📋 Headers:', error.response?.headers);
+    console.error('💬 Data:', error.response?.data);
+    console.error('🔍 Config:', error.config);
+
     throw new Error(
-      `Erro ao gerar access token: ${error.response?.data?.message || error.message}`
+      `Erro ao gerar access token: ${error.response?.status} - ${JSON.stringify(error.response?.data) || error.message}`
     );
   }
 };
@@ -154,7 +163,66 @@ const saveConnection = async (shopId, authCode, tokenData, shopInfo) => {
 };
 
 // ========================================
-// DEBUG ENDPOINT (ADICIONAR PRIMEIRO)
+// ENDPOINT DE TESTE SHOPEE
+// ========================================
+app.get('/api/test-shopee', async (req, res) => {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    // Testar diferentes endpoints
+    const endpoints = [
+      '/api/v2/auth/token',
+      '/api/v2/auth/access_token',
+      '/api/v1/auth/token',
+    ];
+
+    const results = [];
+
+    for (const path of endpoints) {
+      const signature = generateSignature(path, timestamp);
+      const testUrl = `${SHOPEE_CONFIG.api_base}${path}`;
+
+      try {
+        const response = await axios.get(testUrl, {
+          params: {
+            partner_id: SHOPEE_CONFIG.partner_id,
+            timestamp: timestamp,
+            sign: signature,
+          },
+          timeout: 10000,
+        });
+
+        results.push({
+          endpoint: path,
+          status: 'success',
+          data: response.data,
+        });
+      } catch (error) {
+        results.push({
+          endpoint: path,
+          status: 'error',
+          error: error.response?.status,
+          message: error.response?.data || error.message,
+        });
+      }
+    }
+
+    res.json({
+      message: 'Teste de endpoints Shopee',
+      partner_id: SHOPEE_CONFIG.partner_id,
+      api_base: SHOPEE_CONFIG.api_base,
+      results: results,
+    });
+  } catch (error) {
+    res.json({
+      error: 'Erro no teste',
+      message: error.message,
+    });
+  }
+});
+
+// ========================================
+// DEBUG ENDPOINT
 // ========================================
 app.get('/debug/files', (req, res) => {
   const fs = require('fs');
@@ -273,9 +341,9 @@ app.get('/dashboard', (req, res) => {
 
               <div class="debug">
                   <h3>🔧 Debug Info:</h3>
-                  <p><a href="/debug/files" >Ver Debug Completo</a></p>
-                  <p><a href="/api/my-shopee/status" >Status da Conexão</a></p>
-                  <p><a href="/api/my-shopee/products" >Ver Produtos</a></p>
+                  <p><a href="/debug/files" target="_blank">Ver Debug Completo</a></p>
+                  <p><a href="/api/my-shopee/status" target="_blank">Status da Conexão</a></p>
+                  <p><a href="/api/my-shopee/products" target="_blank">Ver Produtos</a></p>
               </div>
           </div>
       </body>
@@ -290,7 +358,7 @@ app.get('/dashboard', (req, res) => {
 app.get('/auth/shopee/callback', async (req, res) => {
   const { code, shop_id, error } = req.query;
 
-  console.log('�� Callback recebido:', {
+  console.log('🔄 Callback recebido:', {
     code: code?.substring(0, 10) + '...',
     shop_id,
     error,
@@ -349,7 +417,7 @@ app.get('/auth/shopee/callback', async (req, res) => {
         <head><title>🎉 SUA Loja Conectada!</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
           <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 700px; margin: 0 auto;">
-            <div style="font-size: 6em; margin-bottom: 20px;">��</div>
+            <div style="font-size: 6em; margin-bottom: 20px;">🎉</div>
             <h1>SUA LOJA SHOPEE CONECTADA!</h1>
             <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 10px; margin: 25px 0;">
               <p><strong>🏪 Shop ID:</strong> ${shop_id}</p>
@@ -681,6 +749,7 @@ app.use((req, res) => {
     connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     available_routes: [
       '/debug/files - Debug de arquivos',
+      '/api/test-shopee - Teste endpoints Shopee',
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
       '/api/my-shopee/status',
