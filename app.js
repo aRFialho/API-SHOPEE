@@ -20,11 +20,9 @@ let connectionStore = {
 };
 
 // ========================================
-// CONFIGURAÇÃO COM DOMÍNIO FIXO
+// CONFIGURAÇÃO COM DOMÍNIO PERSONALIZADO
 // ========================================
-const FIXED_DOMAIN = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
+const FIXED_DOMAIN = 'https://shopee-manager.vercel.app';
 
 const SHOPEE_CONFIG = {
   partner_id: '2012740',
@@ -36,7 +34,7 @@ const SHOPEE_CONFIG = {
   api_base: 'https://partner.shopeemobile.com',
 };
 
-console.log('🌐 Domínio fixo configurado:', FIXED_DOMAIN);
+console.log('🌐 Domínio personalizado configurado:', FIXED_DOMAIN);
 
 // ========================================
 // FUNÇÕES AUXILIARES
@@ -63,11 +61,11 @@ const generateAuthUrl = () => {
   return `${SHOPEE_CONFIG.api_base}${path}?partner_id=${SHOPEE_CONFIG.partner_id}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(SHOPEE_CONFIG.redirect_url)}`;
 };
 
-// Função para gerar access token (ENDPOINT CORRETO)
+// Função para gerar access token (ENDPOINT CORRETO DA DOCUMENTAÇÃO)
 const generateAccessToken = async (code, shopId) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
-    const path = '/api/v2/auth/access_token'; // ENDPOINT CORRETO
+    const path = '/api/v2/auth/token'; // CORRETO conforme documentação
     const signature = generateSignature(path, timestamp);
 
     const requestData = {
@@ -84,10 +82,12 @@ const generateAccessToken = async (code, shopId) => {
 
     const fullUrl = `${SHOPEE_CONFIG.api_base}${path}`;
 
-    console.log('🔑 GERANDO ACCESS TOKEN - ENDPOINT CORRETO:');
+    console.log('🔑 GERANDO ACCESS TOKEN - ENDPOINT CORRETO DA DOCUMENTAÇÃO:');
     console.log('📍 URL:', fullUrl);
     console.log('📦 Body:', requestData);
     console.log('🔗 Params:', requestParams);
+    console.log('🔐 Signature:', signature);
+    console.log('⏰ Timestamp:', timestamp);
 
     const response = await axios.post(fullUrl, requestData, {
       params: requestParams,
@@ -95,12 +95,15 @@ const generateAccessToken = async (code, shopId) => {
     });
 
     console.log('✅ Access token gerado com sucesso!');
+    console.log('📋 Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ ERRO DETALHADO:');
     console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}${path}`);
     console.error('📊 Status:', error.response?.status);
+    console.error('📋 Headers:', error.response?.headers);
     console.error('💬 Data:', error.response?.data);
+    console.error('🔍 Config:', error.config);
 
     throw new Error(
       `Erro ao gerar access token: ${error.response?.status} - ${JSON.stringify(error.response?.data) || error.message}`
@@ -207,6 +210,7 @@ app.get('/api/test-shopee', async (req, res) => {
       message: 'Teste de endpoints Shopee',
       partner_id: SHOPEE_CONFIG.partner_id,
       api_base: SHOPEE_CONFIG.api_base,
+      fixed_domain: FIXED_DOMAIN,
       results: results,
     });
   } catch (error) {
@@ -215,52 +219,6 @@ app.get('/api/test-shopee', async (req, res) => {
       message: error.message,
     });
   }
-});
-
-// Teste de diferentes API bases
-app.get('/api/test-api-bases', async (req, res) => {
-  const apiBases = [
-    'https://partner.shopeemobile.com',
-    'https://partner.test-stable.shopeemobile.com',
-    'https://partner.uat.shopeemobile.com',
-  ];
-
-  const results = [];
-
-  for (const apiBase of apiBases) {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const path = '/api/v2/auth/access_token';
-    const signature = generateSignature(path, timestamp);
-
-    try {
-      const response = await axios.get(`${apiBase}${path}`, {
-        params: {
-          partner_id: SHOPEE_CONFIG.partner_id,
-          timestamp: timestamp,
-          sign: signature,
-        },
-        timeout: 10000,
-      });
-
-      results.push({
-        api_base: apiBase,
-        status: 'success',
-        data: response.data,
-      });
-    } catch (error) {
-      results.push({
-        api_base: apiBase,
-        status: 'error',
-        error: error.response?.status,
-        message: error.response?.data || error.message,
-      });
-    }
-  }
-
-  res.json({
-    message: 'Teste de diferentes API bases',
-    results: results,
-  });
 });
 
 // Teste com diferentes partners
@@ -295,13 +253,77 @@ app.get('/api/test-partners', (req, res) => {
       partner_id: partner.id,
       auth_url: authUrl,
       signature: signature,
+      callback_url: SHOPEE_CONFIG.redirect_url,
     };
   });
 
   res.json({
     message: 'Teste com diferentes partners',
     current_domain: FIXED_DOMAIN,
+    callback_configured: SHOPEE_CONFIG.redirect_url,
     partners: results,
+  });
+});
+
+// Teste do endpoint correto de auth
+app.get('/api/test-auth-real', async (req, res) => {
+  const endpoints = [
+    { path: '/api/v2/auth/token', method: 'POST' },
+    { path: '/api/v2/auth/access_token', method: 'POST' },
+    { path: '/api/v2/public/auth/token', method: 'POST' },
+    { path: '/api/v1/auth/token', method: 'POST' },
+  ];
+
+  const results = [];
+
+  for (const endpoint of endpoints) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = generateSignature(endpoint.path, timestamp);
+
+    const testData = {
+      code: 'test_code_12345',
+      shop_id: 123456789,
+      partner_id: parseInt(SHOPEE_CONFIG.partner_id),
+    };
+
+    try {
+      const response = await axios.post(
+        `${SHOPEE_CONFIG.api_base}${endpoint.path}`,
+        testData,
+        {
+          params: {
+            partner_id: SHOPEE_CONFIG.partner_id,
+            timestamp: timestamp,
+            sign: signature,
+          },
+          timeout: 10000,
+        }
+      );
+
+      results.push({
+        endpoint: endpoint.path,
+        method: endpoint.method,
+        status: 'success',
+        data: response.data,
+      });
+    } catch (error) {
+      results.push({
+        endpoint: endpoint.path,
+        method: endpoint.method,
+        status: 'error',
+        error: error.response?.status,
+        message: error.response?.data || error.message,
+        url: `${SHOPEE_CONFIG.api_base}${endpoint.path}`,
+      });
+    }
+  }
+
+  res.json({
+    message: 'Teste de endpoints de auth reais',
+    partner_id: SHOPEE_CONFIG.partner_id,
+    fixed_domain: FIXED_DOMAIN,
+    test_data: testData,
+    results: results,
   });
 });
 
@@ -390,27 +412,52 @@ app.get('/dashboard', (req, res) => {
       <!DOCTYPE html>
       <html>
       <head>
-          <title>Dashboard - Arquivo não encontrado</title>
+          <title>Shopee Manager Dashboard</title>
           <style>
               body { font-family: Arial; margin: 0; padding: 20px; background: #f8f9fa; }
               .container { max-width: 800px; margin: 0 auto; }
-              .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; margin: 20px 0; }
+              .header { background: #28a745; color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
               .info { background: #d4edda; color: #155724; padding: 20px; border-radius: 10px; margin: 20px 0; }
               .debug { background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; margin: 20px 0; }
+              a { color: #007bff; text-decoration: none; margin: 10px; display: inline-block; }
+              a:hover { text-decoration: underline; }
+              .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; text-decoration: none; display: inline-block; margin: 5px; }
+              .btn:hover { background: #0056b3; color: white; }
           </style>
       </head>
       <body>
           <div class="container">
-              <h1>❌ Dashboard não encontrado</h1>
-              <div class="error">
-                  <h3>Arquivo não encontrado:</h3>
-                  <p><strong>Caminho:</strong> ${dashboardPath}</p>
+              <div class="header">
+                  <h1>🛍️ Shopee Manager</h1>
+                  <p><strong>Domínio:</strong> ${FIXED_DOMAIN}</p>
+                  <p><strong>Status:</strong> ${connectionStore.connected ? '🟢 CONECTADO' : '🔴 AGUARDANDO CONEXÃO'}</p>
               </div>
+
+              <div class="info">
+                  <h3>📋 Configuração Atual:</h3>
+                  <p><strong>🌐 Domínio Fixo:</strong> shopee-manager.vercel.app</p>
+                  <p><strong>🔑 Partner ID:</strong> ${SHOPEE_CONFIG.partner_id}</p>
+                  <p><strong>🔗 Callback URL:</strong> ${SHOPEE_CONFIG.redirect_url}</p>
+                  <p><strong>🏪 Loja:</strong> ${connectionStore.shop_info?.shop_name || 'Não conectada'}</p>
+              </div>
+
               <div class="debug">
-                  <h3>🔧 Debug Info:</h3>
-                  <p><a href="/debug/files" target="_blank">Ver Debug Completo</a></p>
-                  <p><a href="/api/test-partners" target="_blank">Testar Partners</a></p>
-                  <p><a href="/api/test-api-bases" target="_blank">Testar API Bases</a></p>
+                  <h3>🔧 Testes e Debug:</h3>
+                  <a href="/api/test-partners" target="_blank" class="btn">Testar Partners</a>
+                  <a href="/api/test-auth-real" target="_blank" class="btn">Testar Auth</a>
+                  <a href="/api/my-shopee/connect" target="_blank" class="btn">Conectar Loja</a>
+                  <a href="/api/my-shopee/status" target="_blank" class="btn">Status</a>
+                  <a href="/debug/files" target="_blank" class="btn">Debug Files</a>
+              </div>
+
+              <div class="info">
+                  <h3>📝 Próximos Passos:</h3>
+                  <ol>
+                      <li>Configure o domínio <strong>shopee-manager.vercel.app</strong> no Shopee Open Platform</li>
+                      <li>Use <strong>/api/my-shopee/connect</strong> para gerar auth_url</li>
+                      <li>Clique na auth_url para conectar sua loja</li>
+                      <li>Aguarde redirecionamento automático</li>
+                  </ol>
               </div>
           </div>
       </body>
@@ -522,7 +569,7 @@ app.get('/api/my-shopee/setup', (req, res) => {
     domain_fixed: true,
     partner_id_set: true,
     partner_key_set: true,
-    message: 'SUA loja configurada com domínio fixo!',
+    message: 'SUA loja configurada com domínio personalizado!',
     config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
@@ -530,7 +577,7 @@ app.get('/api/my-shopee/setup', (req, res) => {
       redirect_url: SHOPEE_CONFIG.redirect_url,
     },
     shopee_configuration: {
-      domain_to_set: FIXED_DOMAIN,
+      domain_to_set: 'shopee-manager.vercel.app',
       callback_endpoint: `${FIXED_DOMAIN}/auth/shopee/callback`,
     },
     status: 'ready_to_connect',
@@ -546,7 +593,7 @@ app.get('/api/my-shopee/connect', (req, res) => {
       auth_url: authUrl,
       message: 'Clique no auth_url para conectar SUA loja Shopee',
       instructions: [
-        '1. Configure o domínio na Shopee Open Platform primeiro',
+        '1. Configure o domínio shopee-manager.vercel.app na Shopee Open Platform',
         '2. Clique no auth_url abaixo',
         '3. Faça login na SUA conta Shopee (a que tem milhares de produtos)',
         '4. Autorize o acesso aos seus produtos',
@@ -554,7 +601,7 @@ app.get('/api/my-shopee/connect', (req, res) => {
       ],
       domain_info: {
         fixed_domain: FIXED_DOMAIN,
-        configure_in_shopee: FIXED_DOMAIN,
+        configure_in_shopee: 'shopee-manager.vercel.app',
         callback_url: SHOPEE_CONFIG.redirect_url,
         partner_id: SHOPEE_CONFIG.partner_id,
       },
@@ -584,12 +631,13 @@ app.get('/api/my-shopee/status', (req, res) => {
     res.json({
       success: true,
       connected: false,
-      message: 'Configure o domínio na Shopee e conecte sua loja',
+      message:
+        'Configure o domínio shopee-manager.vercel.app na Shopee e conecte sua loja',
       domain_status: 'fixed_domain_ready',
       fixed_domain: FIXED_DOMAIN,
-      configure_in_shopee: FIXED_DOMAIN,
+      configure_in_shopee: 'shopee-manager.vercel.app',
       next_steps: [
-        '1. Configure o domínio na Shopee Open Platform',
+        '1. Configure o domínio shopee-manager.vercel.app na Shopee Open Platform',
         '2. Use /api/my-shopee/connect para gerar auth_url',
         '3. Clique na auth_url para conectar sua loja',
       ],
@@ -664,16 +712,22 @@ app.get('/api/my-shopee/products', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: 'API V3 DEBUG',
+    version: 'API V5 DOMÍNIO PERSONALIZADO',
     timestamp: new Date().toISOString(),
-    message: 'Shopee Manager - SUA Loja Real com domínio fixo!',
+    message: 'Shopee Manager - SUA Loja Real com domínio personalizado!',
     fixed_domain: FIXED_DOMAIN,
     connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     shopee_config: {
       partner_id: SHOPEE_CONFIG.partner_id,
       environment: SHOPEE_CONFIG.environment,
       domain_fixed: true,
+      custom_domain: 'shopee-manager.vercel.app',
     },
+    available_tests: [
+      '/api/test-auth-real - Teste auth endpoints',
+      '/api/test-partners - Teste partners',
+      '/api/my-shopee/connect - Conectar loja',
+    ],
   });
 });
 
@@ -692,10 +746,10 @@ app.use((req, res) => {
     fixed_domain: FIXED_DOMAIN,
     connection_status: connectionStore.connected ? 'connected' : 'disconnected',
     available_routes: [
+      '/dashboard - Dashboard principal',
       '/debug/files - Debug de arquivos',
-      '/api/test-shopee - Teste endpoints Shopee',
-      '/api/test-api-bases - Teste API bases',
       '/api/test-partners - Teste partners',
+      '/api/test-auth-real - Teste auth real',
       '/api/my-shopee/setup',
       '/api/my-shopee/connect',
       '/api/my-shopee/status',
@@ -714,7 +768,7 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`🌐 Domínio fixo: ${FIXED_DOMAIN}`);
+    console.log(`🌐 Domínio personalizado: ${FIXED_DOMAIN}`);
   });
 }
 
