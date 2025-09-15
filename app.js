@@ -15,11 +15,11 @@ const FIXED_DOMAIN = process.env.VERCEL_URL
 const SHOPEE_CONFIG = {
   partner_id: '1185765',
   partner_key:
-    'shpk52447844616d65636e77716a6a676d696c646947466d67496c4c584c6e52',
+    'shpk4c4b4e655a6b54536853704e48646470634d734258695765684b42624e43', // ✅ NOVA KEY
   redirect_url: `${FIXED_DOMAIN}/auth/shopee/callback`,
   base_domain: FIXED_DOMAIN,
-  environment: 'sandbox',
-  api_base: 'https://partner.test-stable.shopeemobile.com',
+  environment: 'production', // ✅ MUDAR PARA PRODUCTION
+  api_base: 'https://partner.shopeemobile.com', // ✅ REMOVER 'test-stable'
 };
 
 console.log('? Dom�nio fixo configurado:', FIXED_DOMAIN);
