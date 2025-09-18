@@ -24,7 +24,7 @@ let connectionStore = {
 // ========================================
 require('dotenv').config();
 
-const FIXED_DOMAIN = process.env.API_BASE_URL || 'https://shopee-manager-604z8x8wp-raphaels-projects-11cd9f6b.vercel.app';
+const FIXED_DOMAIN = process.env.API_BASE_URL || 'https://shopee-manager.vercel.app';
 
 const SHOPEE_CONFIG = {
   partner_id: process.env.SHOPEE_PARTNER_ID || '2012740',
@@ -473,10 +473,22 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ========================================
-// CALLBACK DA SHOPEE
+// CALLBACK DA SHOPEE - COM VERIFICAÇÃO
 // ========================================
 app.get('/auth/shopee/callback', async (req, res) => {
   const { code, shop_id, error } = req.query;
+
+  // ✅ VERIFICAÇÃO PARA TESTE DA SHOPEE (SEM PARÂMETROS)
+  if (!code && !shop_id && !error) {
+    return res.status(200).json({
+      status: 'ok',
+      message: 'Shopee callback endpoint is working',
+      timestamp: new Date().toISOString(),
+      domain: FIXED_DOMAIN,
+      endpoint: '/auth/shopee/callback',
+      ready: true
+    });
+  }
 
   console.log('🔄 Callback recebido:', {
     code: code?.substring(0, 10) + '...',
