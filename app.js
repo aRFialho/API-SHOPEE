@@ -81,10 +81,10 @@ const generateAccessToken = async (code, shopId) => {
     };
 
     const requestParams = {
-      partner_id: SHOPEE_CONFIG.partner_id,
-      timestamp: timestamp,
-      sign: signature,
-    };
+    partner_id: parseInt(SHOPEE_CONFIG.partner_id),  // ✅ CONVERTER PARA NUMBER
+    timestamp: timestamp,
+    sign: signature,
+};
 
     const fullUrl = `${SHOPEE_CONFIG.api_base}${path}`;
 
