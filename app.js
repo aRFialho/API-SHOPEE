@@ -67,10 +67,11 @@ const generateAuthUrl = () => {
 };
 
 // Função para gerar access token (ENDPOINT CORRETO DA DOCUMENTAÇÃO)
+// Função para gerar access token (ENDPOINT CORRETO DA DOCUMENTAÇÃO)
 const generateAccessToken = async (code, shopId) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
-    const path = '/api/v2/auth/token'; // CORRETO conforme documentação
+    const path = '/api/v2/auth/token/get'; // ✅ CORRETO conforme documentação
     const signature = generateSignature(path, timestamp);
 
     const requestData = {
@@ -89,7 +90,7 @@ const generateAccessToken = async (code, shopId) => {
 
     console.log('🔑 GERANDO ACCESS TOKEN - ENDPOINT CORRETO DA DOCUMENTAÇÃO:');
     console.log('📍 URL:', fullUrl);
-    console.log('📦 Body:', requestData);
+    console.log('�� Body:', requestData);
     console.log('🔗 Params:', requestParams);
     console.log('🔐 Signature:', signature);
     console.log('⏰ Timestamp:', timestamp);
@@ -104,7 +105,7 @@ const generateAccessToken = async (code, shopId) => {
     return response.data;
   } catch (error) {
     console.error('❌ ERRO DETALHADO:');
-    console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}${path}`);
+    console.error('🌐 URL:', `${SHOPEE_CONFIG.api_base}/api/v2/auth/token/get`); // CORRIGIDO
     console.error('📊 Status:', error.response?.status);
     console.error('📋 Headers:', error.response?.headers);
     console.error('💬 Data:', error.response?.data);
